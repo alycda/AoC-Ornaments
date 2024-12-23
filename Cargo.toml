@@ -1,5 +1,8 @@
 [package]
 name = "aoc-ornaments"
-version = "0.0.0"
+version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
+
+[dependencies]
+miette = "7.4.0"
