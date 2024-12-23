@@ -3,22 +3,22 @@ pub trait Solution {
     type Output: std::fmt::Display + Default;  
 
     /// Required for AoC
-    fn part1(&mut self) -> miette::Result<Self::Output> {
+    fn part1(&mut self) -> SolutionResult<Self::Output> {
         todo!()
     }
 
     /// Required for AoC
-    fn part2(&mut self) -> miette::Result<Self::Output> {
+    fn part2(&mut self) -> SolutionResult<Self::Output> {
         todo!()
     }
 
     /// Optional, for everybody.codes or bonus AoC
-    fn part3(&mut self) -> miette::Result<Self::Output> {
+    fn part3(&mut self) -> SolutionResult<Self::Output> {
         // Ok("".to_string())
         Ok(<Self as Solution>::Output::default())
     }
 
-    fn solve(&mut self, which: Part) -> miette::Result<String> {
+    fn solve(&mut self, which: Part) -> SolutionResult<String> {
         Ok(match which {
             Part::One => self.part1()?.to_string(),
             Part::Two => self.part2()?.to_string(),
@@ -37,6 +37,11 @@ pub enum Part {
     /// for everybody.codes
     Three,
 }
+
+#[cfg(feature = "miette")]
+pub type SolutionResult<T> = miette::Result<T>;
+#[cfg(not(feature = "miette"))]
+pub type SolutionResult<T> = Result<T, Box<dyn std::error::Error>>;
 
 #[cfg(test)]
 mod tests {
