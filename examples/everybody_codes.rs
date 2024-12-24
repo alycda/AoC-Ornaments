@@ -20,7 +20,7 @@ impl TryFrom<&str> for Day {
     }
 }
 
-fn main() -> miette::Result<()>{
+fn main() -> miette::Result<()> {
     let mut day = Day::try_from("aoc")?;
     let part1 = day.solve(Part::One)?;
     let part2 = day.solve(Part::Two)?;

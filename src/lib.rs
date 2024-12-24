@@ -26,7 +26,7 @@ pub trait Solution: TryFrom<&'static str> {
     }
 }
 
-/// Puzzla parts
+/// Puzzle parts
 #[derive(Debug, Clone, Copy)]
 pub enum Part {
     /// AoC
