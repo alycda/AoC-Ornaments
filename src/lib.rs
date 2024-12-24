@@ -1,3 +1,6 @@
+/// Shared behavior amongst AOC/Everybody.codes solutions
+/// 
+/// [TryFrom] is a supertrait because we ALWAYS have to parse string input
 pub trait Solution: TryFrom<&'static str> {
     /// Ensures the output can be converted to a string
     type Output: std::fmt::Display + Default;  
@@ -87,7 +90,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Part 3 is not implemented but available if needed (everbody.codes, or aoc community bonus")]
     fn test_part_3() {
         let mut day = Day;
 
