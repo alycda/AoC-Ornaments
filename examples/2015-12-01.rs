@@ -16,27 +16,20 @@ impl Solution for Day {
     type Output = i32;
 
     fn part1(&mut self) -> miette::Result<Self::Output> {
-        let output = self.iter().sum();
-        Ok(output)
+        Ok(self.iter().sum())
     }
 
     fn part2(&mut self) -> miette::Result<Self::Output> {
-        // seems to be 1-indexed, not 0-indexed
-        // let mut idx = 1;
-
         let output = self.iter()
-            .enumerate()
-            .scan(1, |state, (_i, x)| {
-                *state += x;
-            if *state < 1 {
-                // idx += i;
-                None  // Stops iteration here
-            } else {
-                Some(*state)
-            }
-        }).count();
+            .scan(0, |floor, &x| {
+                *floor += x;
+                Some(*floor)
+            })
+            .position(|floor| floor < 0)
+            .map(|pos| pos + 1)
+            .unwrap_or(0);
 
-        Ok((output + 1) as i32)
+        Ok(output as i32)
     }
 }
 
