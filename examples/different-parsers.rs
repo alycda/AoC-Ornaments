@@ -1,6 +1,6 @@
 //! Example of how to implement different parsers for each part of the solution.
 
-use std::marker::PhantomData;
+use std::{marker::PhantomData, str::FromStr};
 
 use aoc_ornaments::{Part, Solution};
 
@@ -15,32 +15,32 @@ struct Day<P>(PhantomData<P>);
 
 impl<P> Solution for Day<P> 
 where
-    Day<P>: TryFrom<&'static str, Error = miette::Error>,
+    Day<P>: FromStr<Err = miette::Error>,
 {
     type Output = usize;
 }
 
 // blanket implementation will cause conflicts for the compiler, instead you must add the where clause above
-// impl<P> TryFrom<&str> for Day<P> {
-//     type Error = miette::Error;
+// impl<P> FromStr for Day<P> {
+//     type Err = miette::Error;
 
-//     fn try_from(_input: &str) -> miette::Result<Self> {
+//     fn from_str(_input: &str) -> miette::Result<Self> {
 //         Ok(Self(PhantomData))
 //     }
 // } 
 
-impl TryFrom<&str> for Day<Part1> {
-    type Error = miette::Error;
+impl FromStr for Day<Part1> {
+    type Err = miette::Error;
 
-    fn try_from(_input: &str) -> miette::Result<Self> {
+    fn from_str(_input: &str) -> miette::Result<Self> {
         Ok(Self(PhantomData))
     }
 }
 
-impl TryFrom<&str> for Day<Part2> {
-    type Error = miette::Error;
+impl FromStr for Day<Part2> {
+    type Err = miette::Error;
 
-    fn try_from(_input: &str) -> miette::Result<Self> {
+    fn from_str(_input: &str) -> miette::Result<Self> {
         Ok(Self(PhantomData))
     }
 }
@@ -49,8 +49,8 @@ impl TryFrom<&str> for Day<Part2> {
 fn main() -> miette::Result<()> {
     let input = "aoc";
 
-    let part1 = Day::<Part1>::try_from(input)?.solve(Part::One)?;
-    let part2 = Day::<Part2>::try_from(input)?.solve(Part::Two)?;
+    let part1 = Day::<Part1>::from_str(input)?.solve(Part::One)?;
+    let part2 = Day::<Part2>::from_str(input)?.solve(Part::Two)?;
 
     println!("Part 1: {}", part1);
     println!("Part 2: {}", part2);

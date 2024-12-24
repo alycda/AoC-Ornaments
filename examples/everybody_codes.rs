@@ -1,5 +1,7 @@
 //! Example implementaiton of a 3-part Everybody Codes solution.
 
+use std::str::FromStr;
+
 use aoc_ornaments::{Part, Solution};
 
 struct Day;
@@ -12,16 +14,16 @@ impl Solution for Day {
     }
 }
 
-impl TryFrom<&str> for Day {
-    type Error = miette::Error;
+impl FromStr for Day {
+    type Err = miette::Error;
 
-    fn try_from(_input: &str) -> miette::Result<Self> {
+    fn from_str(_input: &str) -> miette::Result<Self> {
         Ok(Self)
     }
 }
 
 fn main() -> miette::Result<()> {
-    let mut day = Day::try_from("aoc")?;
+    let mut day = Day::from_str("aoc")?;
     let part1 = day.solve(Part::One)?;
     let part2 = day.solve(Part::Two)?;
     let part3 = day.solve(Part::Three)?;

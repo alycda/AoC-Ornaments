@@ -1,5 +1,7 @@
 //! Day 1: Not Quite Lisp
 
+use std::str::FromStr;
+
 use aoc_ornaments::{Part, Solution};
 
 struct Day(Vec<i32>);
@@ -33,10 +35,10 @@ impl Solution for Day {
     }
 }
 
-impl TryFrom<&str> for Day {
-    type Error = miette::Error;
+impl FromStr for Day {
+    type Err = miette::Error;
 
-    fn try_from(input: &str) -> miette::Result<Self> {
+    fn from_str(input: &str) -> miette::Result<Self> {
         let parsed = input.chars().map(|c| {
             match c {
                 '(' => 1,
@@ -50,7 +52,7 @@ impl TryFrom<&str> for Day {
 }
 
 fn main() -> miette::Result<()> {
-    let mut day = Day::try_from(include_str!("./inputs/2015-12-01.txt"))?;
+    let mut day = Day::from_str(include_str!("./inputs/2015-12-01.txt"))?;
     let part1 = day.solve(Part::One)?;
     let part2 = day.solve(Part::Two)?;
 
@@ -77,7 +79,7 @@ mod tests {
     #[case(")))", -3)]
     #[case(")())())", -3)]
     fn test_cases_part1(#[case] input: &str, #[case] expected: i32) {
-        let mut day = Day::try_from(input).unwrap();
+        let mut day = Day::from_str(input).unwrap();
         assert_eq!(day.solve(Part::One).unwrap(), expected.to_string());
     }
 
@@ -85,7 +87,7 @@ mod tests {
     #[case(")", 1)]
     #[case("()())", 5)]
     fn test_cases_part2(#[case] input: &str, #[case] expected: i32) {
-        let mut day = Day::try_from(input).unwrap();
+        let mut day = Day::from_str(input).unwrap();
         assert_eq!(day.solve(Part::Two).unwrap(), expected.to_string());
     }
 }

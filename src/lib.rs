@@ -1,7 +1,9 @@
+use std::str::FromStr;
+
 /// Shared behavior amongst AOC/Everybody.codes solutions
 /// 
-/// [TryFrom] is a supertrait because we ALWAYS have to parse string input
-pub trait Solution: TryFrom<&'static str> {
+/// [FromStr] is a supertrait because we ALWAYS have to parse string input
+pub trait Solution: FromStr {
     /// Ensures the output can be converted to a string
     type Output: std::fmt::Display + Default;  
 
@@ -63,17 +65,17 @@ mod tests {
         }
     }
 
-    impl TryFrom<&str> for Day {
-        type Error = miette::Error;
+    impl FromStr for Day {
+        type Err = miette::Error;
 
-        fn try_from(_input: &str) -> miette::Result<Self> {
+        fn from_str(_input: &str) -> miette::Result<Self> {
             Ok(Self)
         }
     }
 
     #[test]
     fn test_part_1() -> miette::Result<()> {
-        let mut day = Day::try_from("")?;
+        let mut day = Day::from_str("")?;
 
         let solution = day.solve(Part::One)?;
         assert_eq!("Hello, Rudolph!".to_string(), solution);
@@ -82,7 +84,7 @@ mod tests {
 
     #[test]
     fn test_part_2() -> miette::Result<()> {
-        let mut day: Day = "".try_into()?;
+        let mut day: Day = "".parse()?;
 
         let solution = day.solve(Part::Two)?;
         assert_eq!("Hello, Santa!".to_string(), solution);
