@@ -1,19 +1,19 @@
-pub trait Solution {
+pub trait Solution: TryFrom<&'static str> {
     /// Ensures the output can be converted to a string
     type Output: std::fmt::Display + Default;  
 
     /// Required for AoC
-    fn part1(&mut self) -> SolutionResult<Self::Output> {
+    fn part1(&mut self) -> SolutionResult<<Self as Solution>::Output> {
         todo!()
     }
 
     /// Required for AoC
-    fn part2(&mut self) -> SolutionResult<Self::Output> {
+    fn part2(&mut self) -> SolutionResult<<Self as Solution>::Output> {
         todo!()
     }
 
     /// Optional, for everybody.codes or bonus AoC
-    fn part3(&mut self) -> SolutionResult<Self::Output> {
+    fn part3(&mut self) -> SolutionResult<<Self as Solution>::Output> {
         // Ok("".to_string())
         Ok(<Self as Solution>::Output::default())
     }
@@ -61,9 +61,17 @@ mod tests {
         }
     }
 
+    impl TryFrom<&str> for Day {
+        type Error = miette::Error;
+
+        fn try_from(_input: &str) -> miette::Result<Self> {
+            Ok(Self)
+        }
+    }
+
     #[test]
     fn test_part_1() -> miette::Result<()> {
-        let mut day = Day;
+        let mut day = Day::try_from("")?;
 
         let solution = day.solve(Part::One)?;
         assert_eq!("Hello, Rudolph!".to_string(), solution);
@@ -72,7 +80,7 @@ mod tests {
 
     #[test]
     fn test_part_2() -> miette::Result<()> {
-        let mut day = Day;
+        let mut day: Day = "".try_into()?;
 
         let solution = day.solve(Part::Two)?;
         assert_eq!("Hello, Santa!".to_string(), solution);
