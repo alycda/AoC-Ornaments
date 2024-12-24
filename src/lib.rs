@@ -14,7 +14,6 @@ pub trait Solution: TryFrom<&'static str> {
 
     /// Optional, for everybody.codes or bonus AoC
     fn part3(&mut self) -> SolutionResult<<Self as Solution>::Output> {
-        // Ok("".to_string())
         Ok(<Self as Solution>::Output::default())
     }
 
