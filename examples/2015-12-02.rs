@@ -106,7 +106,6 @@ fn main() -> miette::Result<()> {
     Ok(())
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
