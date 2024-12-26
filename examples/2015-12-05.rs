@@ -1,6 +1,6 @@
 //! Day 5: Doesn't He Have Intern-Elves For This?
 
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 use aoc_ornaments::{Part, Solution};
 
@@ -27,6 +27,34 @@ impl Day {
     fn is_nice(line: &str) -> bool {
         !has_forbidden_pair(line) && has_double_letter(line) && (count_vowels(line) >= 3)
     }
+
+    fn is_nice_v2(line: &str) -> bool {
+        has_non_overlapping_pair(line) && has_sandwich_letter(line)
+    }
+}
+
+fn has_non_overlapping_pair(s: &str) -> bool {
+    let mut pair_positions: HashMap<(char, char), usize> = HashMap::new();
+    
+    s.chars()
+        .collect::<Vec<_>>()
+        .windows(2)
+        .enumerate()
+        .any(|(i, w)| {
+            let pair = (w[0], w[1]);
+            if let Some(&prev_pos) = pair_positions.get(&pair) {
+                // If we find the pair and it's not overlapping (i.e., more than 1 position apart)
+                i > prev_pos + 1
+            } else {
+                // First time seeing this pair, store its position
+                pair_positions.insert(pair, i);
+                false
+            }
+        })
+}
+
+fn has_sandwich_letter(s: &str) -> bool {
+    s.as_bytes().windows(3).any(|w| w[0] == w[2])
 }
 
 fn has_forbidden_pair(s: &str) -> bool {
@@ -51,15 +79,19 @@ impl Solution for Day {
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
         Ok(self.iter().filter(|line| Day::is_nice(line)).count())
     }
+
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+        Ok(self.iter().filter(|line| Day::is_nice_v2(line)).count())
+    }
 }
 
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("./inputs/2015-12-05.txt"))?;
     let part1 = day.solve(Part::One)?;
-    // let part2 = day.solve(Part::Two)?;
+    let part2 = day.solve(Part::Two)?;
 
     println!("Part 1: {}", part1);
-    // println!("Part 2: {}", part2);
+    println!("Part 2: {}", part2);
 
     Ok(())
 }
@@ -78,5 +110,14 @@ mod tests {
     #[case("dvszwmarrgswjxmb", false)]
     fn test_cases_part1(#[case] input: &str, #[case] expected: bool) {
         assert_eq!(Day::is_nice(input), expected);
+    }
+
+    #[rstest]
+    #[case("qjhvhtzxzqqjkmpb", true)]
+    #[case("xxyxx", true)]
+    #[case("uurcxstgmygtbstg", false)]
+    #[case("ieodomkazucvgmuy", false)]
+    fn test_cases_part2(#[case] input: &str, #[case] expected: bool) {
+        assert_eq!(Day::is_nice_v2(input), expected);
     }
 }
