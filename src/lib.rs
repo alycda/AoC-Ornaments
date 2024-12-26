@@ -1,5 +1,7 @@
 use std::str::FromStr;
 
+pub mod spatial;
+
 /// Shared behavior amongst AOC/Everybody.codes solutions
 /// 
 /// [FromStr] is a supertrait because we ALWAYS have to parse string input
