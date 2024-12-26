@@ -1,6 +1,6 @@
 //! Day 5: Doesn't He Have Intern-Elves For This?
 
-use std::{collections::HashMap, str::FromStr};
+use std::str::FromStr;
 
 use aoc_ornaments::{Part, Solution};
 
@@ -34,23 +34,10 @@ impl Day {
 }
 
 fn has_non_overlapping_pair(s: &str) -> bool {
-    let mut pair_positions: HashMap<(char, char), usize> = HashMap::new();
-    
-    s.chars()
-        .collect::<Vec<_>>()
-        .windows(2)
-        .enumerate()
-        .any(|(i, w)| {
-            let pair = (w[0], w[1]);
-            if let Some(&prev_pos) = pair_positions.get(&pair) {
-                // If we find the pair and it's not overlapping (i.e., more than 1 position apart)
-                i > prev_pos + 1
-            } else {
-                // First time seeing this pair, store its position
-                pair_positions.insert(pair, i);
-                false
-            }
-        })
+    let chars: Vec<_> = s.chars().collect();
+    chars.windows(2).enumerate().any(|(i, w1)| {
+        chars[i+2..].windows(2).any(|w2| w1[0] == w2[0] && w1[1] == w2[1])
+    })
 }
 
 fn has_sandwich_letter(s: &str) -> bool {
@@ -58,7 +45,7 @@ fn has_sandwich_letter(s: &str) -> bool {
 }
 
 fn has_forbidden_pair(s: &str) -> bool {
-    s.contains("ab") || s.contains("cd") || s.contains("pq") || s.contains("xy")
+    ["ab", "cd", "pq", "xy"].iter().any(|&pair| s.contains(pair))
 }
 
 fn has_double_letter(s: &str) -> bool {
