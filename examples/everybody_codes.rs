@@ -1,4 +1,4 @@
-//! Example implementaiton of a 3-part Everybody Codes solution.
+//! Example implementation of a 3-part Everybody Codes solution.
 
 use std::str::FromStr;
 
