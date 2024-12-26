@@ -12,6 +12,113 @@ pub fn manhattan_distance(a: &Position, b: &Position) -> i32 {
 /// a Region or set of Positions
 pub type UniquePositions = HashSet<Position>;
 
+#[derive(Debug)]
+pub struct Grid<T>(Vec<Vec<T>>);
+
+impl<T> std::ops::Deref for Grid<T> {
+    type Target = Vec<Vec<T>>;
+    
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T> std::ops::DerefMut for Grid<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<T: std::fmt::Debug + Copy + PartialEq> Grid<T> {
+    pub fn initialize(width: usize, height: usize, value: T) -> Self {
+        let mut grid = Vec::with_capacity(height);
+        for _ in 0..height {
+            let row = vec![value; width];
+            grid.push(row);
+        }
+
+        Self(grid)
+    }
+
+    pub fn get_width(&self) -> usize {
+        self[0].len()
+    }
+
+    pub fn get_height(&self) -> usize {
+        self.len()
+    }
+
+    pub fn get_at_unbounded(&self, pos: Position) -> T {
+        self[pos.y as usize][pos.x as usize]
+    }
+
+    /// Bounded by the grid's dimensions
+    pub fn get_at(&self, pos: Position) -> Option<T> {
+        // if pos.x < 0 || pos.y < 0 || pos.x >= self.get_width() as i32 || pos.y >= self.get_height() as i32 {
+        if !self.in_bounds(pos) {
+            return None;
+        }
+
+        Some(self[pos.y as usize][pos.x as usize])
+        // Some(self.get_at_unbounded(pos))
+    }
+
+    pub fn in_bounds(&self, pos: Position) -> bool {
+        pos.x >= 0 && pos.y >= 0 && pos.x < self.get_width() as i32 && pos.y < self.get_height() as i32
+    }
+
+    pub fn set_at(&mut self, pos: Position, value: T) -> Option<()> {
+        if !self.in_bounds(pos) {
+            return None;
+        }
+        self[pos.y as usize][pos.x as usize] = value;
+        Some(())
+    }
+
+    // Unbounded version if you need it
+    pub fn set_at_unbounded(&mut self, pos: Position, value: T) {
+        self[pos.y as usize][pos.x as usize] = value;
+    }
+
+    /// Walks the grid from top-left to bottom-right
+    pub fn walk<F: FnMut(Position) -> O, O>(&self, mut see: F) {
+        for row in 0..self.get_height() {
+            for col in 0..self.get_width() {
+                let pos = Position::new(col as i32, row as i32);
+
+                see(pos);
+            }
+        }
+    }
+
+    pub fn walk_region<F>(&mut self, start: Position, end: Position, mut see: F) 
+    where 
+        F: FnMut(&mut Self, Position)
+    {
+        for row in start.y..=end.y {
+            for col in start.x..=end.x {
+                let pos = Position::new(col, row);
+                see(self, pos);
+            }
+        }
+    }
+
+    // pub fn walk_region<F: FnMut(Position) -> O, O>(&self, start: Position, end: Position, mut see: F) {
+    //     for row in start.y..=end.y {
+    //         for col in start.x..=end.x {
+    //             let pos = Position::new(col, row);
+    //             see(pos);
+    //         }
+    //     }
+    // }
+
+    /// because Position is a type and not a NewType, we can't impl FromStr for it
+    pub fn position_from_str(s: &str) -> miette::Result<Position> {
+        let parts: Vec<i32> = s.split(',').map(|s| s.parse().unwrap()).collect();
+        Ok(Position::new(parts[0], parts[1]))
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct Visited<T>(HashMap<Position, T>);
 
