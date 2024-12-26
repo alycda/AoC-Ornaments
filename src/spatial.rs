@@ -257,3 +257,11 @@ impl Direction {
         self.turn_right().opposite()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    
+
+}
