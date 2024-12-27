@@ -33,7 +33,7 @@ impl FromStr for Day {
 
         // otherwise you will get: error[E0521]: borrowed data escapes outside of associated function
         let (_, data) = Self::nom_parser(static_input)
-            .map_err(|e| miette::miette!("Failed to parse input: {}", e))?;;
+            .map_err(|e| miette::miette!("Failed to parse input: {}", e))?;
 
         Ok(Self(data))
     }
