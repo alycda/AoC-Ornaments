@@ -1,9 +1,11 @@
 //! Day 7: Some Assembly Required
 
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
-use aoc_ornaments::{bits::{Instructions, LogicGate, Wires}, Part, Solution};
+use aoc_ornaments::{bits::LogicGate, Part, Solution};
 
+type Wires = HashMap<String, String>;
+type Instructions = Vec<LogicGate<Operand>>;
 
 #[derive(Debug, Clone, Copy)]
 enum Operand {
@@ -35,15 +37,15 @@ impl FromStr for Operand {
 
 #[derive(Debug)]
 struct Day {
-    wires: Wires<String>,
-    instructions: Instructions<Operand>,
+    wires: Wires,
+    instructions: Instructions,
 }
 
 impl FromStr for Day {
     type Err = miette::Error;
 
     fn from_str(input: &str) -> miette::Result<Self> {
-        let mut wires = Wires::new();
+        let mut wires = HashMap::new();
 
         let instructions = input.lines()
             .filter_map(|line| {
@@ -58,17 +60,32 @@ impl FromStr for Day {
                     }
                     // bitwise complement
                     ["NOT", input, "->", output] => {
+                        // let input = input.parse().unwrap();
+                        // let output = output.parse().unwrap();
+
+                        // Some(dbg!(input.to_owned(), output.to_owned(), "", ""))
+
                         Some(LogicGate::new(input.to_string(), "0".to_owned(),  Operand::Not, output.to_string()))
                     }
                     // Logic Gates
                     [left, op, right, "->", output] => {
+                        // let left = left.parse().unwrap();
                         let operation = op.parse().unwrap();
+                        // let right = right.parse().unwrap();
+                        // let output = output.parse().unwrap();
+
+                        // dbg!(left, op, right, output);
 
                         Some(LogicGate::new(left.to_string(), right.to_string(), operation, output.to_string()))
+
+                        // Some((left.to_owned(), op.to_owned(), right.to_owned(), output.to_owned()))
                     }
                     _ => panic!("Invalid instruction")
                 }
+
             }).collect();
+
+        // dbg!(&wires, &instructions);
 
         Ok(Self { wires, instructions })
     }
@@ -78,7 +95,7 @@ impl Day {
     fn do_instructions(&mut self) -> miette::Result<()> {
         let mut pending = self.instructions.clone();
         let mut progress = true;
-        let mut evaluated_wires: Wires<u16> = Wires::new();
+        let mut evaluated_wires: HashMap<String, u16> = HashMap::new();
 
         // First pass - convert any pure number strings to u16
         for (wire, value) in &self.wires {
@@ -111,7 +128,7 @@ impl Day {
                 });
 
             // Helper function to check if we can evaluate a wire
-            fn is_evaluatable(wire: &str, evaluated: &Wires<u16>, initial: &Wires<String>) -> bool {
+            fn is_evaluatable(wire: &str, evaluated: &HashMap<String, u16>, initial: &HashMap<String, String>) -> bool {
                 evaluated.contains_key(wire) || 
                 wire.parse::<u16>().is_ok() ||
                 initial.get(wire).map_or(false, |v| v.parse::<u16>().is_ok())
@@ -120,6 +137,13 @@ impl Day {
             pending = still_pending;
 
             for gate in ready {
+                // dbg!(&gate);
+
+                // let left: u16 = match self.wires[&gate.left].parse() {
+                //     Ok(num) => num,
+                //     Err(_) => evaluated_wires[&gate.left], // Fallback to already evaluated wires
+                // };
+
                 let left: u16 = if let Ok(num) = gate.left.parse::<u16>() {
                     // Direct number in the left operand
                     num
@@ -131,8 +155,13 @@ impl Day {
                     }
                 };
 
+                // let left: u32 = self.wires[&gate.left].parse().unwrap();
+                // let right: u16 = self.wires[&gate.right].parse().unwrap();
+
                 let result: u16 = match gate.operation {
                     Operand::Or => {
+                        // let left: u16 = self.wires[&gate.left].parse().unwrap();
+                        // let right: u16 = self.wires[&gate.right].parse().unwrap();
                         let right: u16 = if let Ok(num) = gate.right.parse::<u16>() {
                             num
                         } else {
@@ -145,6 +174,8 @@ impl Day {
                         left | right
                     },
                     Operand::And => {
+                        // let left: u16 = self.wires[&gate.left].parse().unwrap();
+                        // let right: u16 = self.wires[&gate.right].parse().unwrap();
                         let right: u16 = if let Ok(num) = gate.right.parse::<u16>() {
                             num
                         } else {
@@ -158,18 +189,24 @@ impl Day {
                     },
                     // Bitwise NOT only needs left operand
                     Operand::Not => {
+                        // let left: u16 = self.wires[&gate.left].parse().unwrap();
+
                         !left
                     },  
                     Operand::RightShift => {
+                        // let left: u16 = self.wires[&gate.left].parse().unwrap();
                         let shift: u16 = gate.right.parse().unwrap(); // Right operand is direct number
 
                         left >> shift
                     },
                     Operand::LeftShift => {
+                        // let left: u16 = self.wires[&gate.left].parse().unwrap();
                         let shift: u16 = gate.right.parse().unwrap(); // Right operand is direct number
 
                         left << shift
                     },
+
+                    // _ => todo!(),
                 };
                 
                 self.wires.insert(gate.output, result.to_string());
@@ -203,15 +240,26 @@ impl Solution for Day {
     type Output = u16;
 
     fn part1(&mut self) -> miette::Result<Self::Output> {
+        // // dbg!(&self.instructions);
+
+        // let mut pending = self.instructions.clone();
+        // let mut progress = true;
+
+        // while progress && !pending.is_empty() {
+        //     todo!()
+        // }
+
         self.do_instructions()?;
+
+        // dbg!(&self.wires.get("a"), &self.wires.get("lx"));
+
+        // todo!();
+
+        // Ok(self.wires.get("a").unwrap().parse().unwrap())
         Ok(self.resolve_wire("a"))
     }
 
     fn part2(&mut self) -> miette::Result<Self::Output> {
-        if !self.wires.contains_key("a") {
-            self.do_instructions()?;
-        }
-
         // Store the result from part 1
         let part1_result = self.resolve_wire("a").to_string();
         
@@ -244,15 +292,19 @@ fn main() -> miette::Result<()> {
 mod tests {
     use super::*;
 
-    fn format_wires(wires: &BTreeMap<String, String>) -> String {
-        wires.iter()
+    fn format_wires(wires: &Wires) -> String {
+        let mut entries: Vec<_> = wires.iter().collect();
+        // Sort by key for consistent ordering
+        entries.sort_by(|(a, _), (b, _)| a.cmp(b));
+        
+        entries.iter()
             .map(|(key, value)| format!("{}: {}", key, value))
             .collect::<Vec<_>>()
             .join("\n")
     }
 
     #[test]
-    fn test_part1() -> miette::Result<()> {
+    fn test_cases_part1() -> miette::Result<()> {
         let input = "123 -> x
 456 -> y
 x AND y -> d
@@ -264,6 +316,9 @@ NOT y -> i";
         let mut day = Day::from_str(input)?;
         day.do_instructions()?;
 
+        // dbg!(&day.wires);
+
+        // assert_eq!(day.solve(Part::One).unwrap(), expected.to_string());
         assert_eq!("d: 72
 e: 507
 f: 492
