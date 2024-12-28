@@ -1,3 +1,5 @@
+//! Graph
+//! 
 //! A HashMap would provide O(1) lookups vs O(log n).
 
 // Canonical ordering: always store with lesser point first
@@ -45,16 +47,16 @@ impl<T: std::ops::Add<Output = T> + Clone + Copy + Ord> Distances<T> {
         self.get(&key)
     }
 
-    /// not sure if btree vs hashset is better here
-    pub fn to_unique(&self) -> UniqueLocations {
-        let mut set = BTreeSet::new();
-        for (a, b) in self.keys() {
-            set.insert(a.clone());
-            set.insert(b.clone());
-        }
+    // /// not sure if btree vs hashset is better here
+    // pub fn to_unique(&self) -> Uniqued {
+    //     let mut set = BTreeSet::new();
+    //     for (a, b) in self.keys() {
+    //         set.insert(a.clone());
+    //         set.insert(b.clone());
+    //     }
 
-        set
-    }
+    //     set
+    // }
 
     /// recursive
     pub fn find_shortest_path(&self, current: &str, remaining: &mut HashSet<&str>, total: T, shortest: &mut Option<T>) {
@@ -91,17 +93,17 @@ impl<T: std::ops::Add<Output = T> + Clone + Copy + Ord> Distances<T> {
     }
 
     /// recursive
-    pub fn find_longest_path(&self, current: &str, remaining: &mut HashSet<&str>, total: T, shortest: &mut Option<T>) {
+    pub fn find_longest_path(&self, current: &str, remaining: &mut HashSet<&str>, total: T, longest: &mut Option<T>) {
         // If no(thing)s remain, we've found a complete path
         if remaining.is_empty() {
-            *shortest = match *shortest {
+            *longest = match *longest {
                 None => Some(total),
                 Some(s) => Some(s.max(total))
             };
             return;
         }
 
-        // Try each remaining city as the next step
+        // Try each remaining item as the next step
         let neighbors: Vec<_> = remaining.iter().copied().collect();
         for next in neighbors {
             // Get distance to this neighbor
@@ -118,22 +120,22 @@ impl<T: std::ops::Add<Output = T> + Clone + Copy + Ord> Distances<T> {
                 next,
                 remaining,
                 total + *distance,
-                shortest
+                longest
             );
             remaining.insert(next);
         }
     }
 
-    pub fn get_unique_cities(&self) -> HashSet<&str> {
-        let mut cities = HashSet::new();
-        for ((city1, city2), _) in &self.0 {
-            cities.insert(city1.as_str());
-            cities.insert(city2.as_str());
+    pub fn get_unique(&self) -> HashSet<&str> {
+        let mut unique = HashSet::new();
+        for ((a, b), _) in &self.0 {
+            unique.insert(a.as_str());
+            unique.insert(b.as_str());
         }
-        cities
+        unique
     }
 }
 
 pub fn distance() {}
 
-pub type UniqueLocations = BTreeSet<String>;
+pub type Uniqued = BTreeSet<String>;

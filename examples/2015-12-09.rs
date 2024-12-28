@@ -44,7 +44,7 @@ impl Solution for Day {
     type Output = u32;
 
     fn part1(&mut self) -> miette::Result<Self::Output> {
-        let cities = self.get_unique_cities();
+        let cities = self.get_unique();
         let mut overall_shortest = None;
     
         // Try each city as a starting point
@@ -71,7 +71,7 @@ impl Solution for Day {
     }
 
     fn part2(&mut self) -> miette::Result<Self::Output> {
-        let cities = self.get_unique_cities();
+        let cities = self.get_unique();
         let mut overall_longest = None;
     
         // Try each city as a starting point
