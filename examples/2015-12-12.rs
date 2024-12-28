@@ -1,15 +1,22 @@
 //! Day 12: JSAbacusFramework.io
 
-use std::str::FromStr;
+use std::{marker::PhantomData, str::FromStr};
 
 use aoc_ornaments::{Part, Solution};
-// use miette::Error;
 use nom::{bytes::complete::take_till, character::complete::{char, digit1}, combinator::{map, opt, recognize}, sequence::pair, IResult};
+use serde_json::Value;
 
 #[derive(Debug)]
-struct Day(Vec<i64>);
+struct Text;
 
-impl std::ops::Deref for Day {
+/// intentionally mispelling to avoid ANY conflicts with serde_json
+#[derive(Debug)]
+struct Jasn;
+
+#[derive(Debug)]
+struct Day<J>(Vec<i64>, PhantomData<J>);
+
+impl<J> std::ops::Deref for Day<J> {
     type Target = Vec<i64>;
 
     fn deref(&self) -> &Self::Target {
@@ -17,7 +24,7 @@ impl std::ops::Deref for Day {
     }
 }
 
-impl FromStr for Day {
+impl FromStr for Day<Text> {
     type Err = miette::Error;
 
     fn from_str(input: &str) -> miette::Result<Self> {
@@ -25,65 +32,39 @@ impl FromStr for Day {
         let mut input = input;
 
         while !input.is_empty() {
-            match Day::find_digit(input) {
+            match Day::<Text>::find_digit(input) {
                 Ok((remainder, _)) => {
-                    match Day::parse_number(remainder) {
+                    match Day::<Text>::parse_number(remainder) {
                         Ok((remainder, number)) => {
                             numbers.push(number);
                             input = remainder;
                         },
                         _ => break
-                        // Err(x) => todo!("x: {x:?}")
-                        // _ => todo!()
                     }
-                    // let (remainder, number) = Day::parse_number(remainder).unwrap();
-                    // numbers.push(number);
-                    // input = remainder;
                 },
                 _ => todo!()
             }
         }
 
-
-        // let a = take_until::<_, _, nom::error::Error<_>>("0123456789")(input)
-        //     .map_err(|e| miette::miette!("Failed to parse input: {}", e))
-        //     .map(|(_, output)| output);
-
-        // // let something = take_until::<&str, &str, Error>("0123456789")(input)
-        // //     .unwrap();
-        //     // .map_err(|e| miette::miette!("Failed to parse input: {}", e));
-        //     // .map(|(_, output)| output);
-
-        // dbg!(a);
-
-        // dbg!(Day::nom_parser().unwrap());
-
-        // dbg!(Day::parse_number(input));
-
-        // let (a, _) = Day::better_approach(input).unwrap();
-
-        // // dbg!(Day::better_approach(input).unwrap());
-
-        // // dbg!(a);
-
-        // let (b, c) = Day::parse_number(a).unwrap();
-
-        // dbg!(b, c);
-
-        // todo!()
-
-        Ok(Self(numbers))
+        Ok(Self(numbers, PhantomData))
     }
 }
 
-impl Day {
-    // fn nom_parser() -> IResult<&'static str, &'static str> {
-    //     let (input, _) = take_until::<_, _, nom::error::Error<_>>("0123456789")("abc123").unwrap();
-    //     let (input, output) = digit1::<_, nom::error::Error<_>>(input).unwrap();
+impl FromStr for Day<Jasn> {
+    type Err = miette::Error;
 
-    //     Ok((input, output))
-    // }
+    fn from_str(input: &str) -> miette::Result<Self> {
+        let json: Value = serde_json::from_str(input)
+            .map_err(|e| miette::miette!("Failed to parse JSON: {}", e))?;
+        
+        // Part 1: Just collect all numbers
+        let numbers = Day::<Jasn>::ignore_red(&json);
 
+        Ok(Self(numbers, PhantomData))
+    }
+}
+
+impl<J> Day<J> {
     fn find_digit(input: &str) -> IResult<&str, &str> {
         // take_till takes a predicate function that returns true when we should stop
         take_till(|c: char| c.is_ascii_digit() || c == '-')(input)
@@ -100,31 +81,56 @@ impl Day {
             |num_str: &str| num_str.parse().unwrap()
         )(input)
     }
+
+    fn ignore_red(value: &Value) -> Vec<i64> {
+        let mut numbers = Vec::new();
+        match value {
+            Value::Number(n) => {
+                if let Some(n) = n.as_i64() {
+                    numbers.push(n);
+                }
+            }
+            Value::Array(arr) => {
+                for v in arr {
+                    numbers.extend(Self::ignore_red(v));
+                }
+            }
+            Value::Object(obj) => {
+                // Check if any value is the string "red"
+                if obj.values().any(|v| v == "red") {
+                    return Vec::new(); // Ignore this object and all children
+                }
+                for v in obj.values() {
+                    numbers.extend(Self::ignore_red(v));
+                }
+            }
+            _ => {}
+        }
+        numbers      
+    }
 }
 
-impl Solution for Day {
+impl<J> Solution for Day<J> where Day<J>: FromStr {
     type Output = i64;
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        // dbg!(self);
+        Ok(self.iter().sum())
+    }
 
-        // // let mut sum = Vec::new();
-
-        // // Ok(sum.len())
-
-        // todo!()
-
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
         Ok(self.iter().sum())
     }
 }
 
 fn main() -> miette::Result<()> {
-    let mut day = Day::from_str(include_str!("./inputs/2015-12-12.txt"))?;
-    let part1 = day.solve(Part::One)?;
-    // let part2 = day.solve(Part::Two)?;
+    let input = include_str!("./inputs/2015-12-12.txt");
+    let mut day_part1 = Day::<Text>::from_str(input)?;
+    let mut day_part2 = Day::<Jasn>::from_str(input)?;
+    let part1 = day_part1.solve(Part::One)?;
+    let part2 = day_part2.solve(Part::Two)?;
 
     println!("Part 1: {}", part1);
-    // println!("Part 2: {}", part2);
+    println!("Part 2: {}", part2);
 
     Ok(())
 }
@@ -144,11 +150,21 @@ mod tests {
     #[case("[]", 0)]
     #[case("{}", 0)]
     fn test_cases_part1(#[case] input: &str, #[case] expected: i64) {
-        let mut day = Day::from_str(input).unwrap();
+        let mut day = Day::<Text>::from_str(input).unwrap();
         let output = day.solve(Part::One).unwrap();
 
         assert_eq!(output, expected.to_string());
     }
 
+    #[rstest]
+    #[case("[1,2,3]", 6)]
+    #[case(r#"[1,{"c":"red","b":2},3]"#, 4)]
+    #[case(r#"{"d":"red","e":[1,2,3,4],"f":5}"#, 0)]
+    #[case(r#"[1,"red",5]"#, 6)]
+    fn test_cases_part2(#[case] input: &str, #[case] expected: i64) {
+        let mut day = Day::<Jasn>::from_str(input).unwrap();
+        let output = day.solve(Part::Two).unwrap();
 
+        assert_eq!(output, expected.to_string());
+    }
 }
