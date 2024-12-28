@@ -97,6 +97,40 @@ impl<T: std::ops::Add<Output = T> + Clone + Copy + Ord> Distances<T> {
         }
     }
 
+    /// recursive
+    pub fn find_longest_path(&self, current: &str, remaining: &mut HashSet<&str>, total: T, shortest: &mut Option<T>) {
+        // If no(thing)s remain, we've found a complete path
+        if remaining.is_empty() {
+            *shortest = match *shortest {
+                None => Some(total),
+                Some(s) => Some(s.max(total))
+            };
+            return;
+        }
+
+        // Try each remaining city as the next step
+        let neighbors: Vec<_> = remaining.iter().copied().collect();
+        for next in neighbors {
+            // Get distance to this neighbor
+            let key = if current < next {
+                (current.to_string(), next.to_string())
+            } else {
+                (next.to_string(), current.to_string())
+            };
+            let distance = self.get(&key).unwrap();
+            
+            // Visit this neighbor
+            remaining.remove(next);
+            self.find_longest_path(
+                next,
+                remaining,
+                total + *distance,
+                shortest
+            );
+            remaining.insert(next);
+        }
+    }
+
     pub fn get_unique_cities(&self) -> HashSet<&str> {
         let mut cities = HashSet::new();
         for ((city1, city2), _) in &self.0 {
