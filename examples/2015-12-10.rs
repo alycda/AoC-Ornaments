@@ -1,6 +1,6 @@
 //! Day 10: Elves Look, Elves Say
 
-use std::{collections::HashMap, str::FromStr};
+use std::str::FromStr;
 
 use aoc_ornaments::{Part, Solution};
 use itertools::Itertools;
@@ -48,38 +48,10 @@ impl FromStr for Day {
         }
 
         Ok(Self(result))
-
-        // Ok(Self(peekable.fold(Vec::new(), |mut acc, c| {
-        //     let count = acc.iter().rev().take_while(|(c2, _)| *c2 == c as u32).count();
-        //     acc.push((c as u32, count));
-        //     acc
-        // })))
     }
 }
 
 impl Day {
-    // fn next_sequence(&mut self) -> Self {
-    //     let mut result = Vec::new();
-    //     for &(count, digit) in self.0.iter() {
-    //         // Push the count as a separate number, then the digit
-    //         result.push((1, char::from_digit(count as u32, 10).unwrap()));
-    //         result.push((1, digit));
-    //     }
-    //     Self(result)
-    // }
-
-    // fn next_sequence(&mut self) -> Self {
-    //     let mut result = Vec::with_capacity(self.0.len() * 2); // Preallocate as it tends to grow
-        
-    //     for &(count, digit) in self.0.iter() {
-    //         // Convert the count to a character (will be '1' to '9')
-    //         let count_char = char::from_digit(count as u32, 10).unwrap();
-    //         result.push((1, count_char));
-    //         result.push((1, digit));
-    //     }
-        
-    //     Self(result)
-    // }
 
     fn next_sequence(&self) -> Self {
         // Convert our current state to a string to use group_by
@@ -87,7 +59,7 @@ impl Day {
         
         // Use group_by to collect runs of same digit
         let result = string_rep.chars()
-            .group_by(|&x| x) // Group consecutive same chars
+            .chunk_by(|&x| x) // Group consecutive same chars
             .into_iter()
             .map(|(c, group)| {
                 let count = group.count() as u64;
@@ -97,39 +69,25 @@ impl Day {
 
         Self(result)
     }
-
-    // fn next_sequence_cached(&self) -> Self {
-    //     let mut result_map: HashMap<(u64, char), u64> = HashMap::new();
-        
-    //     for &(count, digit) in self.0.iter() {
-    //         // Instead of creating new vec entries, we'll increment counts in the map
-    //         *result_map.entry((1, char::from_digit(count as u32, 10).unwrap())).or_default() += 1;
-    //         *result_map.entry((1, digit)).or_default() += 1;
-    //     }
-        
-    //     // Convert back to vec only once at the end
-    //     let result = result_map
-    //         .into_iter()
-    //         .map(|((count, digit), occurrences)| (count * occurrences, digit))
-    //         .collect();
-            
-    //     Self(result)
-    // }
 }
 
 impl Solution for Day {
     type Output = usize;
 
     fn part1(&mut self) -> miette::Result<Self::Output> {
-        // dbg!(&self);
-
         let mut current = Day(self.clone());
         for _ in 0..39 {
             current = current.next_sequence();
         }
         Ok(current.0.len() * 2)
+    }
 
-        // Ok(self.len() * 2)
+    fn part2(&mut self) -> miette::Result<Self::Output> {
+        let mut current = Day(self.clone());
+        for _ in 0..49 {
+            current = current.next_sequence();
+        }
+        Ok(current.0.len() * 2)
     }
 }
 
@@ -142,10 +100,10 @@ impl ToString for Day {
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("./inputs/2015-12-10.txt"))?;
     let part1 = day.solve(Part::One)?;
-    // let part2 = day.solve(Part::Two)?;
+    let part2 = day.solve(Part::Two)?;
 
-    println!("Part 1: {}", part1); // > 45370, < 643280
-    // println!("Part 2: {}", part2);
+    println!("Part 1: {}", part1);
+    println!("Part 2: {}", part2);
 
     Ok(())
 }
