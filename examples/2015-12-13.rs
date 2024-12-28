@@ -1,6 +1,6 @@
 //! Day 13: Knights of the Dinner Table
 
-use std::{collections::{BTreeSet, HashMap, HashSet}, str::FromStr};
+use std::{collections::HashSet, str::FromStr};
 
 use aoc_ornaments::{linear::Distances, Part, Solution};
 
@@ -8,15 +8,9 @@ type Happiness = Distances<i64>;
 
 /// values are NOT reflexive. (A, B) is not the same as (B, A)
 #[derive(Debug)]
-// struct Day(Vec<(String, (i64, i64))>);
-// struct Day(HashMap<String, (String, i64)>);
-// struct Day(HashMap<(String, String), i64>);
 struct Day(Happiness);
 
 impl std::ops::Deref for Day {
-    // type Target = Vec<(String, (i64, i64))>;
-    // type Target = HashMap<String, (String, i64)>;
-    // type Target = HashMap<(String, String), i64>;
     type Target = Happiness;
 
     fn deref(&self) -> &Self::Target {
@@ -92,26 +86,33 @@ impl Solution for Day {
     type Output = i64;
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        dbg!(&self);
-        let mut people = dbg!(self.get_unique());
+        let mut people = self.get_unique();
         let mut max_happiness = None;
         let start = people.iter().next().unwrap().clone();
         people.remove(&start);
         self.find_happiest_arrangement(start, start, &mut people, 0, &mut max_happiness);
 
-        dbg!(&max_happiness);
+        Ok(max_happiness.unwrap())
+    }
 
-        todo!()
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+        let mut people = self.get_unique();
+        let mut max_happiness = None;
+        let start = "Me";
+        people.insert(start);
+        self.find_happiest_arrangement(start, start, &mut people, 0, &mut max_happiness);
+
+        Ok(max_happiness.unwrap())
     }
 }
 
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("./inputs/2015-12-13.txt"))?;
     let part1 = day.solve(Part::One)?;
-    // let part2 = day.solve(Part::Two)?;
+    let part2 = day.solve(Part::Two)?;
 
     println!("Part 1: {}", part1);
-    // println!("Part 2: {}", part2);
+    println!("Part 2: {}", part2);
 
     Ok(())
 }
