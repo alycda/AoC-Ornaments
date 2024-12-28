@@ -26,6 +26,8 @@ impl FromStr for Day {
                 match parts.as_slice() {
                     [a, "to", b, "=", d] => {
                         let distance = d.parse().unwrap();
+                        // map.insert((a.to_string(), b.to_string()), distance);
+                        // map.insert((b.to_string(), a.to_string()), distance);
                         map.insert_ordered(a.to_string(), b.to_string(), distance);
                     },
                     _ => panic!("Invalid input"),
