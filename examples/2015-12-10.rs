@@ -26,23 +26,19 @@ impl FromStr for Day {
         let mut result = Vec::new();
 
         while let Some(c) = peekable.next() {
-            // dbg!(current_count, c, peekable.peek());
 
             if let Some(next) = peekable.peek() {
                 match(c, next) {
                     (c, next) if c == *next => {
                         current_count += 1;
                     }
-                    (c, next) => {
+                    (c, _) => {
                         result.push((current_count, c));
-            //             dbg!(c, next);
                         current_count = 1
                     }
                 }
             } else {
-                // dbg!(current_count, c);
                 result.push((current_count, c));
-                // panic!("now what?");
             }
 
         }
