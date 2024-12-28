@@ -87,7 +87,7 @@ impl Solution for Day {
             let mut path_longest = None;
             self.find_longest_path(start, &mut remaining, 0, &mut path_longest);
             
-            // Update overall shortest if this path is longer
+            // Update overall longest if this path is longer
             if let Some(path_len) = path_longest {
                 overall_longest = match overall_longest {
                     None => Some(path_len),
