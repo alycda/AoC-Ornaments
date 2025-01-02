@@ -72,7 +72,7 @@ impl Add for Properties {
             durability: self.durability + other.durability,
             flavor: self.flavor + other.flavor,
             texture: self.texture + other.texture,
-            calories: 0
+            calories: self.calories + other.calories
         }
     }
 }
@@ -96,7 +96,7 @@ impl Properties {
             durability: self.durability * count as i32,
             flavor: self.flavor * count as i32,
             texture: self.texture * count as i32,
-            calories: 0,
+            calories: self.calories * count as i32,
         }
     }
 
@@ -223,6 +223,12 @@ impl Day {
         
         total_properties.score()
     }
+
+    fn calories(&self, amounts: &[(String, usize)]) -> i32 {
+        amounts.iter().fold(0, |acc, (name, amount)| {
+            acc + self.0[name].calories * *amount as i32
+        })
+    }
 }
 
 impl Solution for Day {
@@ -235,7 +241,7 @@ impl Solution for Day {
         // Generate splits points for 100 teaspoons among n ingredients
         (0..100 + n - 1).combinations(n - 1)
             .map(|splits| {
-                // Convert split points to amounts using the same method as Python
+                // Convert split points to amounts
                 let mut amounts = Vec::with_capacity(n);
                 let mut prev = -1;
                 
@@ -258,15 +264,50 @@ impl Solution for Day {
             .max()
             .ok_or_else(|| miette::miette!("No valid combinations found"))
     }
+
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
+        let ingredients: Vec<String> = self.0.keys().cloned().collect();
+        let n = ingredients.len();
+        
+        // Generate splits points for 100 teaspoons among n ingredients
+        (0..100 + n - 1).combinations(n - 1)
+            .map(|splits| {
+                // Convert split points to amounts
+                let mut amounts = Vec::with_capacity(n);
+                let mut prev = -1;
+                
+                for (idx, &split) in splits.iter().enumerate() {
+                    amounts.push((
+                        ingredients[idx].clone(),
+                        (split as i32 - prev - 1) as usize
+                    ));
+                    prev = split as i32;
+                }
+                
+                // Handle last ingredient
+                amounts.push((
+                    ingredients[n-1].clone(),
+                    (100 + n as i32 - 1 - prev - 1) as usize
+                ));
+
+                if self.calories(&amounts) != 500 {
+                    return 0;
+                }
+                
+                self.score_recipe(&amounts)
+            })
+            .max()
+            .ok_or_else(|| miette::miette!("No valid combinations found"))
+    }
 }
 
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("./inputs/2015-12-15.txt"))?;
     let part1 = day.solve(Part::One)?;
-    // let part2 = day.solve(Part::Two)?;
+    let part2 = day.solve(Part::Two)?;
 
     println!("Part 1: {}", part1);
-    // println!("Part 2: {}", part2);
+    println!("Part 2: {}", part2);
 
     Ok(())
 }
@@ -283,12 +324,9 @@ mod tests {
         let butterscotch = Properties::from_str("capacity -1, durability -2, flavor 6, texture 3, calories 8").expect("invalid input");
         let cinnamon = Properties::from_str("capacity 2, durability 3, flavor -2, texture -1, calories 3").expect("invalid input");
 
-        // dbg!(&butterscotch, &cinnamon);
-        // dbg!(butterscotch.teaspoon(tsp.0), cinnamon.teaspoon(tsp.1));
+        let ingredients = dbg!(butterscotch.teaspoon(tsp.0) + cinnamon.teaspoon(tsp.1));
 
-        let z = dbg!(butterscotch.teaspoon(tsp.0) + cinnamon.teaspoon(tsp.1));
-
-        assert_eq!(z.score(), expected.0 * expected.1 * expected.2 * expected.3);
+        assert_eq!(ingredients.score(), expected.0 * expected.1 * expected.2 * expected.3);
     }
 
     #[test]
@@ -300,5 +338,17 @@ Cinnamon: capacity 2, durability 3, flavor -2, texture -1, calories 3";
         let result = day.solve(Part::One).unwrap();
 
         assert_eq!(result, "62842880");
+    }
+
+    #[rstest]
+    #[case((40, 60), (500, 57600000))]
+    fn test_cases_part2(#[case] tsp: (usize, usize), #[case] expected: (i32, usize)) {
+        let butterscotch = Properties::from_str("capacity -1, durability -2, flavor 6, texture 3, calories 8").expect("invalid input");
+        let cinnamon = Properties::from_str("capacity 2, durability 3, flavor -2, texture -1, calories 3").expect("invalid input");
+
+        let ingredients = dbg!(butterscotch.teaspoon(tsp.0) + cinnamon.teaspoon(tsp.1));
+
+        assert_eq!(ingredients.calories, expected.0);
+        assert_eq!(ingredients.score(), expected.1);
     }
 }
