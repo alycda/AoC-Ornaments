@@ -228,37 +228,32 @@ impl Day {
 impl Solution for Day {
     type Output = usize;
 
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        // dbg!(&self);
-
-        // self.iter().for_each(|(name, props)| {
-        //     dbg!(name, props);
-        // });
-
-        // todo!()
-
+    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         let ingredients: Vec<String> = self.0.keys().cloned().collect();
+        let n = ingredients.len();
         
-        // Generate combinations that sum to 100
-        (0..=100)
-            .combinations_with_replacement(ingredients.len() - 1)
-            .filter_map(|amounts| {
-                let sum: usize = amounts.iter().sum();
-                if sum <= 100 {
-                    let last_amount = 100 - sum;
-                    let mut full_amounts = amounts.clone();
-                    full_amounts.push(last_amount);
-                    
-                    // Pair ingredients with amounts
-                    let recipe: Vec<(String, usize)> = ingredients.iter()
-                        .cloned()
-                        .zip(full_amounts)
-                        .collect();
-                        
-                    Some(self.score_recipe(&recipe))
-                } else {
-                    None
+        // Generate splits points for 100 teaspoons among n ingredients
+        (0..100 + n - 1).combinations(n - 1)
+            .map(|splits| {
+                // Convert split points to amounts using the same method as Python
+                let mut amounts = Vec::with_capacity(n);
+                let mut prev = -1;
+                
+                for (idx, &split) in splits.iter().enumerate() {
+                    amounts.push((
+                        ingredients[idx].clone(),
+                        (split as i32 - prev - 1) as usize
+                    ));
+                    prev = split as i32;
                 }
+                
+                // Handle last ingredient
+                amounts.push((
+                    ingredients[n-1].clone(),
+                    (100 + n as i32 - 1 - prev - 1) as usize
+                ));
+                
+                self.score_recipe(&amounts)
             })
             .max()
             .ok_or_else(|| miette::miette!("No valid combinations found"))
@@ -270,7 +265,7 @@ fn main() -> miette::Result<()> {
     let part1 = day.solve(Part::One)?;
     // let part2 = day.solve(Part::Two)?;
 
-    println!("Part 1: {}", part1); // > 11754288
+    println!("Part 1: {}", part1);
     // println!("Part 2: {}", part2);
 
     Ok(())
@@ -285,19 +280,13 @@ mod tests {
     #[rstest]
     #[case((44, 56), (68, 80, 152, 76))]
     fn test_cases_part1(#[case] tsp: (usize, usize), #[case] expected: (usize, usize, usize, usize)) {
-//         let input = "Butterscotch: capacity -1, durability -2, flavor 6, texture 3, calories 8
-// Cinnamon: capacity 2, durability 3, flavor -2, texture -1, calories 3";
+        let butterscotch = Properties::from_str("capacity -1, durability -2, flavor 6, texture 3, calories 8").expect("invalid input");
+        let cinnamon = Properties::from_str("capacity 2, durability 3, flavor -2, texture -1, calories 3").expect("invalid input");
 
-//         let mut day = Day::from_str(input).unwrap();
-        // let b = day.get("Butterscotch").unwrap();
-        // let c = day.get("Cinnamon").unwrap();
+        // dbg!(&butterscotch, &cinnamon);
+        // dbg!(butterscotch.teaspoon(tsp.0), cinnamon.teaspoon(tsp.1));
 
-        let b = Properties::from_str("Butterscotch: capacity -1, durability -2, flavor 6, texture 3, calories 8").expect("invalid input");
-        let c = Properties::from_str("Cinnamon: capacity 2, durability 3, flavor -2, texture -1, calories 3").expect("invalid input");
-
-        dbg!(&b, &c);
-        dbg!(b.teaspoon(tsp.0), c.teaspoon(tsp.1));
-        let z = dbg!(b.teaspoon(tsp.0) + c.teaspoon(tsp.1));
+        let z = dbg!(butterscotch.teaspoon(tsp.0) + cinnamon.teaspoon(tsp.1));
 
         assert_eq!(z.score(), expected.0 * expected.1 * expected.2 * expected.3);
     }
