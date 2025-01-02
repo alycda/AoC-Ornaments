@@ -88,14 +88,6 @@ impl Solution for Day {
             let metrics = Self::process_string(line).expect("Invalid string");
             metrics.code_len - metrics.mem_len
         }))
-        // let total = self.iter()
-        //     .map(|line| {
-        //         let metrics = Self::process_string(line).expect("Invalid string");
-        //         metrics.code_len - metrics.mem_len
-        //     })
-        //     .sum::<usize>();
-        
-        // Ok(total)
     }
 
     fn part2(&mut self) -> miette::Result<Self::Output> {
@@ -103,14 +95,6 @@ impl Solution for Day {
             let encoded = Self::encode_string(line);
             encoded.len() - line.len()
         }))
-        // let total = self.iter()
-        //     .map(|line| {
-        //         let encoded = Self::encode_string(line);
-        //         encoded.len() - line.len()
-        //     })
-        //     .sum::<usize>();
-        
-        // Ok(total)
     }
 }
 

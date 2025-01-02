@@ -89,12 +89,10 @@ impl Solution for Day {
     type Output = u32;
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        // Ok(self.iter().map(|sides: &(u32, u32, u32)| Self::dimensions(*sides)).sum())
         Ok(self.compute(Self::dimensions))
     }
 
     fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        // Ok(self.iter().map(|sides: &(u32, u32, u32)| Self::ribbon(*sides)).sum())
         Ok(self.compute(Self::ribbon))
     }
 }

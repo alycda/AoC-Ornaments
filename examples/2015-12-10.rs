@@ -65,7 +65,7 @@ impl Day {
         Self(result)
     }
 
-    /// off by one
+    /// off by one because the first iteration is handled in parse
     fn compute(&self, count: usize) -> usize {
         let mut current = Day(self.to_vec());
         for _ in 0..count {
@@ -80,20 +80,10 @@ impl Solution for Day {
 
     fn part1(&mut self) -> miette::Result<Self::Output> {
         Ok(self.compute(39))
-        // let mut current = Day(self.clone());
-        // for _ in 0..39 {
-        //     current = current.next_sequence();
-        // }
-        // Ok(current.0.len() * 2)
     }
 
     fn part2(&mut self) -> miette::Result<Self::Output> {
         Ok(self.compute(49))
-        // let mut current = Day(self.clone());
-        // for _ in 0..49 {
-        //     current = current.next_sequence();
-        // }
-        // Ok(current.0.len() * 2)
     }
 }
 

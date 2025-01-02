@@ -69,12 +69,10 @@ impl Solution for Day {
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
         Ok(self.compute(Day::is_nice))
-        // Ok(self.iter().filter(|line| Self::is_nice(line)).count())
     }
 
     fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        Ok(self.compute(Day::is_nice))
-        // Ok(self.iter().filter(|line| Self::is_nice_v2(line)).count())
+        Ok(self.compute(Day::is_nice_v2))
     }
 }
 

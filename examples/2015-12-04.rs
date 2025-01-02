@@ -49,16 +49,10 @@ impl Solution for Day {
 
     fn part1(&mut self) -> miette::Result<Self::Output> {
         self.compute(Self::has_five_leading_zeros).ok_or_else(|| miette::miette!("No solution found"))
-        // (1..).find(|&n| {
-        //     Day::has_five_leading_zeros(&Day::generate_hash_bytes(&self.0, n))
-        // }).ok_or_else(|| miette::miette!("No solution found"))
     }
 
     fn part2(&mut self) -> miette::Result<Self::Output> {
         self.compute(Self::has_six_leading_zeros).ok_or_else(|| miette::miette!("No solution found"))
-        // (1..).find(|&n| {
-        //     Day::has_six_leading_zeros(&Day::generate_hash_bytes(&self.0, n))
-        // }).ok_or_else(|| miette::miette!("No solution found"))
     }
 }
 

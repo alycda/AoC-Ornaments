@@ -229,75 +229,54 @@ impl Day {
             acc + self.0[name].calories * *amount as i32
         })
     }
+
+    fn compute<F>(&self, filter: F) -> miette::Result<usize>
+    where 
+        F: Fn(&[(String, usize)]) -> bool,
+    {
+        let ingredients: Vec<String> = self.0.keys().cloned().collect();
+        let n = ingredients.len();
+        
+        (0..100 + n - 1)
+            .combinations(n - 1)
+            .filter_map(|splits| {
+                let mut amounts = Vec::with_capacity(n);
+                let mut prev = -1;
+                
+                for (idx, &split) in splits.iter().enumerate() {
+                    amounts.push((
+                        ingredients[idx].clone(),
+                        (split as i32 - prev - 1) as usize
+                    ));
+                    prev = split as i32;
+                }
+                
+                amounts.push((
+                    ingredients[n-1].clone(),
+                    (100 + n as i32 - 1 - prev - 1) as usize
+                ));
+
+                if !filter(&amounts) {
+                    return None;
+                }
+                
+                Some(self.score_recipe(&amounts))
+            })
+            .max()
+            .ok_or_else(|| miette::miette!("No valid combinations found"))
+    }
+
 }
 
 impl Solution for Day {
     type Output = usize;
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        let ingredients: Vec<String> = self.0.keys().cloned().collect();
-        let n = ingredients.len();
-        
-        // Generate splits points for 100 teaspoons among n ingredients
-        (0..100 + n - 1).combinations(n - 1)
-            .map(|splits| {
-                // Convert split points to amounts
-                let mut amounts = Vec::with_capacity(n);
-                let mut prev = -1;
-                
-                for (idx, &split) in splits.iter().enumerate() {
-                    amounts.push((
-                        ingredients[idx].clone(),
-                        (split as i32 - prev - 1) as usize
-                    ));
-                    prev = split as i32;
-                }
-                
-                // Handle last ingredient
-                amounts.push((
-                    ingredients[n-1].clone(),
-                    (100 + n as i32 - 1 - prev - 1) as usize
-                ));
-                
-                self.score_recipe(&amounts)
-            })
-            .max()
-            .ok_or_else(|| miette::miette!("No valid combinations found"))
+        self.compute(|_| true)
     }
 
     fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        let ingredients: Vec<String> = self.0.keys().cloned().collect();
-        let n = ingredients.len();
-        
-        // Generate splits points for 100 teaspoons among n ingredients
-        (0..100 + n - 1).combinations(n - 1)
-            .map(|splits| {
-                // Convert split points to amounts
-                let mut amounts = Vec::with_capacity(n);
-                let mut prev = -1;
-                
-                for (idx, &split) in splits.iter().enumerate() {
-                    amounts.push((
-                        ingredients[idx].clone(),
-                        (split as i32 - prev - 1) as usize
-                    ));
-                    prev = split as i32;
-                }
-                
-                // Handle last ingredient
-                amounts.push((
-                    ingredients[n-1].clone(),
-                    (100 + n as i32 - 1 - prev - 1) as usize
-                ));
-
-                if self.calories(&amounts) != 500 {
-                    return 0;
-                }
-                
-                self.score_recipe(&amounts)
-            })
-            .max()
-            .ok_or_else(|| miette::miette!("No valid combinations found"))
+        self.compute(|amounts| self.calories(amounts) == 500)
     }
 }
 
