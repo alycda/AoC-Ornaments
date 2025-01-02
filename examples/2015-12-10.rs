@@ -48,7 +48,6 @@ impl FromStr for Day {
 }
 
 impl Day {
-
     fn next_sequence(&self) -> Self {
         // Convert our current state to a string to use group_by
         let string_rep = self.to_string();
@@ -65,25 +64,36 @@ impl Day {
 
         Self(result)
     }
+
+    /// off by one
+    fn compute(&self, count: usize) -> usize {
+        let mut current = Day(self.to_vec());
+        for _ in 0..count {
+            current = current.next_sequence();
+        }
+        current.0.len() * 2
+    }
 }
 
 impl Solution for Day {
     type Output = usize;
 
     fn part1(&mut self) -> miette::Result<Self::Output> {
-        let mut current = Day(self.clone());
-        for _ in 0..39 {
-            current = current.next_sequence();
-        }
-        Ok(current.0.len() * 2)
+        Ok(self.compute(39))
+        // let mut current = Day(self.clone());
+        // for _ in 0..39 {
+        //     current = current.next_sequence();
+        // }
+        // Ok(current.0.len() * 2)
     }
 
     fn part2(&mut self) -> miette::Result<Self::Output> {
-        let mut current = Day(self.clone());
-        for _ in 0..49 {
-            current = current.next_sequence();
-        }
-        Ok(current.0.len() * 2)
+        Ok(self.compute(49))
+        // let mut current = Day(self.clone());
+        // for _ in 0..49 {
+        //     current = current.next_sequence();
+        // }
+        // Ok(current.0.len() * 2)
     }
 }
 

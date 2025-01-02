@@ -55,8 +55,8 @@ impl Solution for Day<Part2> {
     fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         let mut common = HashSet::new();
 
-        dbg!(&self.0.santa);
-        dbg!(&self.0.robot);
+        // dbg!(&self.0.santa);
+        // dbg!(&self.0.robot);
 
         // panic!("halt");
 

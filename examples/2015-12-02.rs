@@ -50,7 +50,11 @@ impl std::ops::Deref for Day {
 impl Day {
     fn dimensions(sides: (u32, u32, u32)) -> u32 {
         let (l, w, h) = sides;
-        (2 * l * w) + (2 * w * h) + (2 * h * l) + [l * w, w * h, h * l].iter().min().unwrap()
+        let a = l * w;
+        let b = w * h;
+        let c = h * l;
+
+        (2 * a) + (2 * b) + (2 * c) + [a, b, c].iter().min().unwrap()
     }
 
     fn ribbon(sides: (u32, u32, u32)) -> u32 {
@@ -58,8 +62,19 @@ impl Day {
 
         (2 * x) + (2 * y) + (x * y * z)
     }
+
+    fn compute(&self, l: fn((u32, u32, u32)) -> u32) -> u32 {
+        self.iter().map(|sides| l(*sides)).sum()
+    }
 }
 
+/// todo: sort_unstable():
+/// 
+/// ```rust
+/// let mut dims = [a, b, c];
+/// dims.sort_unstable();
+/// (dims[0], dims[1], dims[2])
+/// ```
 fn sort_dimensions((a, b, c): (u32, u32, u32)) -> (u32, u32, u32) {
     if a >= b && a >= c {
         (b, c, a)
@@ -74,11 +89,13 @@ impl Solution for Day {
     type Output = u32;
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        Ok(self.iter().map(|sides: &(u32, u32, u32)| Self::dimensions(*sides)).sum())
+        // Ok(self.iter().map(|sides: &(u32, u32, u32)| Self::dimensions(*sides)).sum())
+        Ok(self.compute(Self::dimensions))
     }
 
     fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        Ok(self.iter().map(|sides: &(u32, u32, u32)| Self::ribbon(*sides)).sum())
+        // Ok(self.iter().map(|sides: &(u32, u32, u32)| Self::ribbon(*sides)).sum())
+        Ok(self.compute(Self::ribbon))
     }
 }
 

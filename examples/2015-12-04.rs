@@ -38,21 +38,27 @@ impl Day {
         // First three bytes must be 0
         hash[0] == 0 && hash[1] == 0 && hash[2] == 0
     }
+
+    fn compute(&self, l: fn(&[u8; 16]) -> bool) -> Option<u32> {
+        (1..).find(|&n| l(&Day::generate_hash_bytes(&self.0, n)))
+    }
 }
 
 impl Solution for Day {
     type Output = u32;
 
     fn part1(&mut self) -> miette::Result<Self::Output> {
-        (1..).find(|&n| {
-            Day::has_five_leading_zeros(&Day::generate_hash_bytes(&self.0, n))
-        }).ok_or_else(|| miette::miette!("No solution found"))
+        self.compute(Self::has_five_leading_zeros).ok_or_else(|| miette::miette!("No solution found"))
+        // (1..).find(|&n| {
+        //     Day::has_five_leading_zeros(&Day::generate_hash_bytes(&self.0, n))
+        // }).ok_or_else(|| miette::miette!("No solution found"))
     }
 
     fn part2(&mut self) -> miette::Result<Self::Output> {
-        (1..).find(|&n| {
-            Day::has_six_leading_zeros(&Day::generate_hash_bytes(&self.0, n))
-        }).ok_or_else(|| miette::miette!("No solution found"))
+        self.compute(Self::has_six_leading_zeros).ok_or_else(|| miette::miette!("No solution found"))
+        // (1..).find(|&n| {
+        //     Day::has_six_leading_zeros(&Day::generate_hash_bytes(&self.0, n))
+        // }).ok_or_else(|| miette::miette!("No solution found"))
     }
 }
 

@@ -31,6 +31,10 @@ impl Day {
     fn is_nice_v2(line: &str) -> bool {
         has_non_overlapping_pair(line) && has_sandwich_letter(line)
     }
+
+    fn compute(&self, f: fn(&str) -> bool) -> usize {
+        self.iter().filter(|line| f(line)).count()
+    }
 }
 
 fn has_non_overlapping_pair(s: &str) -> bool {
@@ -64,11 +68,13 @@ impl Solution for Day {
     type Output = usize;
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        Ok(self.iter().filter(|line| Day::is_nice(line)).count())
+        Ok(self.compute(Day::is_nice))
+        // Ok(self.iter().filter(|line| Self::is_nice(line)).count())
     }
 
     fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        Ok(self.iter().filter(|line| Day::is_nice_v2(line)).count())
+        Ok(self.compute(Day::is_nice))
+        // Ok(self.iter().filter(|line| Self::is_nice_v2(line)).count())
     }
 }
 

@@ -74,31 +74,43 @@ impl Day {
         result.push('"');
         result
     }
+
+    fn compute(&self, f: fn(&str) -> usize) -> usize {
+        self.iter().map(|line| f(line)).sum()
+    }
 }
 
 impl Solution for Day {
     type Output = usize;
 
     fn part1(&mut self) -> miette::Result<Self::Output> {
-        let total = self.iter()
-            .map(|line| {
-                let metrics = Self::process_string(line).expect("Invalid string");
-                metrics.code_len - metrics.mem_len
-            })
-            .sum::<usize>();
+        Ok(self.compute(|line| {
+            let metrics = Self::process_string(line).expect("Invalid string");
+            metrics.code_len - metrics.mem_len
+        }))
+        // let total = self.iter()
+        //     .map(|line| {
+        //         let metrics = Self::process_string(line).expect("Invalid string");
+        //         metrics.code_len - metrics.mem_len
+        //     })
+        //     .sum::<usize>();
         
-        Ok(total)
+        // Ok(total)
     }
 
     fn part2(&mut self) -> miette::Result<Self::Output> {
-        let total = self.iter()
-            .map(|line| {
-                let encoded = Self::encode_string(line);
-                encoded.len() - line.len()
-            })
-            .sum::<usize>();
+        Ok(self.compute(|line| {
+            let encoded = Self::encode_string(line);
+            encoded.len() - line.len()
+        }))
+        // let total = self.iter()
+        //     .map(|line| {
+        //         let encoded = Self::encode_string(line);
+        //         encoded.len() - line.len()
+        //     })
+        //     .sum::<usize>();
         
-        Ok(total)
+        // Ok(total)
     }
 }
 
@@ -133,7 +145,7 @@ mod tests {
     #[case(r#""aaa\"aaa""#, (10, 7))]
     #[case(r#""\x27""#, (6, 1))]
     fn test_cases_part1(#[case] input: &str, #[case] expected: (usize, usize)) {
-        let metrics = Day::process_string(input);
+        let metrics = Day::process_string(input).expect("Invalid string");
         assert_eq!(metrics.code_len, expected.0);
         assert_eq!(metrics.mem_len, expected.1);
     }

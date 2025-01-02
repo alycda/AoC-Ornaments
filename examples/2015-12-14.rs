@@ -24,9 +24,7 @@ impl ReindeerStats {
     }
 }
 
-/// speed, time, rest
 #[derive(Debug)]
-// struct Day(HashMap<String, (u64, u64, u64)>);
 struct Day(HashMap<String, ReindeerStats>);
 
 impl std::ops::Deref for Day {
@@ -48,7 +46,6 @@ impl FromStr for Day {
 
             match parts.as_slice() {
                 [name, "can", "fly", speed, "km/s", "for", time, "seconds,", "but", "then", "must", "rest", "for", rest, "seconds."] => {
-                    // map.insert(name.to_string(), (speed.parse().unwrap(), time.parse().unwrap(), rest.parse().unwrap()));
                     map.insert(name.to_string(), ReindeerStats::new(speed, time, rest));
                 },
                 _ => panic!("Invalid input"),
@@ -74,9 +71,7 @@ impl Day {
     fn points(count: u64, deer: &[&ReindeerStats]) -> Vec<u64> {
         let mut points = vec![0; deer.len()];
         
-        for i in 1..=count {
-            let mut max_distance = 0;
-            
+        for i in 1..=count {            
             // First pass: find max distance
             let distances: Vec<u64> = deer.iter()
                 .map(|d| Day::seconds(i, d))
@@ -110,36 +105,9 @@ impl Solution for Day {
     }
 
     fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        // for i in 1..=2503 {
-        //     let mut max_distance = 0;
-        //     let mut leaders = Vec::new();
-
-        //     for (name, stats) in self.iter() {
-        //         let (speed, time, rest) = stats;
-        //         let distance = Day::seconds(i, ReindeerStats { speed: *speed, time: *time, rest: *rest });
-
-        //         if distance > max_distance {
-        //             max_distance = distance;
-        //             leaders.clear();
-        //             leaders.push(name);
-        //         } else if distance == max_distance {
-        //             leaders.push(name);
-        //         }
-        //     }
-
-        //     dbg!(&leaders);
-
-        //     for leader in leaders {
-        //         dbg!((self.get(leader).unwrap().0, self.get(leader).unwrap().1, self.get(leader).unwrap().2 + 1));
-        //     }
-        // }
-
-        // // dbg!(&leaders);
-
-        // // Ok(leaders.iter().map(|name| self.get(name.as_str()).unwrap().2).max().unwrap())
-
         let stats: Vec<&ReindeerStats> = self.values().collect();
         let all_points = Day::points(2503, &stats);
+        
         Ok(*all_points.iter().max().unwrap())
     }
 }
