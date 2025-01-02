@@ -1,19 +1,30 @@
 //! Day 15: Science for Hungry People
 
-use std::{collections::HashMap, str::FromStr};
+use std::{collections::HashMap, ops::Add, str::FromStr};
 
 use aoc_ornaments::{Part, Solution};
-use nom::{bytes::complete::{tag, take_until, take_while}, character::complete::{i32, space0, space1}, multi::separated_list1, sequence::{delimited, preceded, terminated, tuple}, IResult};
+use itertools::Itertools;
+use nom::{bytes::complete::{tag, take_until}, character::complete::{i32, space0, space1}, multi::separated_list1, sequence::{delimited, preceded, terminated, tuple}, IResult};
 
 type Ingredients = HashMap<String, Properties>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 struct Properties {
     capacity: i32,
     durability: i32,
     flavor: i32,
     texture: i32,
     calories: i32,
+}
+
+impl FromStr for Properties {
+    type Err = miette::Error;
+
+    fn from_str(input: &str) -> miette::Result<Self> {
+        let (_, props) = Day::parse_properties(input).map_err(|e| miette::miette!("Failed to parse properties: {}", e))?;
+
+        Ok(props)
+    }
 }
 
 impl From<(i32, i32, i32, i32, i32)> for Properties {
@@ -52,6 +63,20 @@ impl From<[&str; 5]> for Properties {
     }
 }
 
+impl Add for Properties {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        Self {
+            capacity: self.capacity + other.capacity,
+            durability: self.durability + other.durability,
+            flavor: self.flavor + other.flavor,
+            texture: self.texture + other.texture,
+            calories: 0
+        }
+    }
+}
+
 impl Properties {
     fn new(capacity: &str, durability: &str, flavor: &str, texture: &str, calories: &str) -> Self {
         Self {
@@ -61,6 +86,27 @@ impl Properties {
             texture: texture.parse().expect("a number"),
             calories: calories.parse().expect("a number"),
         }
+    }
+
+    fn teaspoon(&self, count: usize) -> Self {
+        // self.capacity * self.durability * self.flavor * self.texture
+
+        Self {
+            capacity: self.capacity * count as i32,
+            durability: self.durability * count as i32,
+            flavor: self.flavor * count as i32,
+            texture: self.texture * count as i32,
+            calories: 0,
+        }
+    }
+
+    fn score(&self) -> usize {
+        let capacity = self.capacity.max(0) as usize;
+        let durability = self.durability.max(0) as usize;
+        let flavor = self.flavor.max(0) as usize;
+        let texture = self.texture.max(0) as usize;
+
+        capacity * durability * flavor * texture
     }
 }
 
@@ -133,54 +179,25 @@ impl Day {
             tuple((tag(":"), space0))
         )(input)?;
 
-        dbg!(name, list);
+        // dbg!(name, list);
 
         let (remainder, props) = Self::parse_properties(list)?;
+        // dbg!(&remainder);
 
         Ok((remainder, (name.to_string(), props)))
     }
 
     fn parse_properties(input: &str) -> IResult<&str, Properties> {
-        // dbg!(input);
-
-        // let (x, y) = terminated(take_until("\n"), take_while(separated_list1(tag(","), Self::parse_property)))(input);
-        // let (x, y) = terminated(take_until("\n"), take_while(|| separated_list1(tag(","), Self::parse_property)))(input);
-
-        // dbg!(x, y);
-
-        // let (a, b) = separated_list1(tag(","), Self::parse_property)(input)?;
-        let (_, props) = separated_list1(
+        let (remainder, props) = separated_list1(
             delimited(space0, tag(","), space0),  // This handles " , " as separator
             Self::parse_property
         )(input)?;
 
-        dbg!(&props);
-
-        // let (remainder, (
-        //     (_, capacity), _, // capacity and comma
-        //     (_, durability), _,
-        //     (_, flavor), _,
-        //     (_, texture), _,
-        //     (_, calories)
-        // )) = tuple((
-        //     tuple((Self::parse_property, tag(", "))),
-        //     tuple((Self::parse_property, tag(", "))),
-        //     tuple((Self::parse_property, tag(", "))),
-        //     tuple((Self::parse_property, tag(", "))),
-        //     Self::parse_property
-        // ))(input)?;
-
-        // // Ok((input, Properties::new(capacity.1, durability.1, flavor.1, texture.1, calories.1)));
-        // // Ok((input, Properties::from(capacity.1, durability.1, flavor.1, texture.1, calories.1)));
-        Ok((input, Properties::from(props)))
-
-        // todo!()   
+        Ok((remainder, Properties::from(props)))
     }
 
     // Parse a single property like "capacity 2"
     fn parse_property(input: &str) -> IResult<&str, (&str, i32)> {
-        // dbg!(input);
-
         tuple((
             // Property name
             take_until(" "),
@@ -188,15 +205,63 @@ impl Day {
             preceded(space1, i32)
         ))(input)
     }
+
+    fn score_recipe(&self, amounts: &[(String, usize)]) -> usize {
+        // Sum up the properties for each ingredient according to its amount
+        let total_properties = amounts.iter().fold(
+            Properties {
+                capacity: 0,
+                durability: 0,
+                flavor: 0,
+                texture: 0,
+                calories: 0,
+            },
+            |acc, (name, amount)| {
+                acc + self.0[name].teaspoon(*amount)
+            }
+        );
+        
+        total_properties.score()
+    }
 }
 
 impl Solution for Day {
     type Output = usize;
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        dbg!(&self);
+        // dbg!(&self);
 
-        todo!()
+        // self.iter().for_each(|(name, props)| {
+        //     dbg!(name, props);
+        // });
+
+        // todo!()
+
+        let ingredients: Vec<String> = self.0.keys().cloned().collect();
+        
+        // Generate combinations that sum to 100
+        (0..=100)
+            .combinations_with_replacement(ingredients.len() - 1)
+            .filter_map(|amounts| {
+                let sum: usize = amounts.iter().sum();
+                if sum <= 100 {
+                    let last_amount = 100 - sum;
+                    let mut full_amounts = amounts.clone();
+                    full_amounts.push(last_amount);
+                    
+                    // Pair ingredients with amounts
+                    let recipe: Vec<(String, usize)> = ingredients.iter()
+                        .cloned()
+                        .zip(full_amounts)
+                        .collect();
+                        
+                    Some(self.score_recipe(&recipe))
+                } else {
+                    None
+                }
+            })
+            .max()
+            .ok_or_else(|| miette::miette!("No valid combinations found"))
     }
 }
 
@@ -205,7 +270,7 @@ fn main() -> miette::Result<()> {
     let part1 = day.solve(Part::One)?;
     // let part2 = day.solve(Part::Two)?;
 
-    println!("Part 1: {}", part1); 
+    println!("Part 1: {}", part1); // > 11754288
     // println!("Part 2: {}", part2);
 
     Ok(())
@@ -214,6 +279,28 @@ fn main() -> miette::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use rstest::rstest;
+
+    #[rstest]
+    #[case((44, 56), (68, 80, 152, 76))]
+    fn test_cases_part1(#[case] tsp: (usize, usize), #[case] expected: (usize, usize, usize, usize)) {
+//         let input = "Butterscotch: capacity -1, durability -2, flavor 6, texture 3, calories 8
+// Cinnamon: capacity 2, durability 3, flavor -2, texture -1, calories 3";
+
+//         let mut day = Day::from_str(input).unwrap();
+        // let b = day.get("Butterscotch").unwrap();
+        // let c = day.get("Cinnamon").unwrap();
+
+        let b = Properties::from_str("Butterscotch: capacity -1, durability -2, flavor 6, texture 3, calories 8").expect("invalid input");
+        let c = Properties::from_str("Cinnamon: capacity 2, durability 3, flavor -2, texture -1, calories 3").expect("invalid input");
+
+        dbg!(&b, &c);
+        dbg!(b.teaspoon(tsp.0), c.teaspoon(tsp.1));
+        let z = dbg!(b.teaspoon(tsp.0) + c.teaspoon(tsp.1));
+
+        assert_eq!(z.score(), expected.0 * expected.1 * expected.2 * expected.3);
+    }
 
     #[test]
     fn test_part1() {
@@ -225,6 +312,4 @@ Cinnamon: capacity 2, durability 3, flavor -2, texture -1, calories 3";
 
         assert_eq!(result, "62842880");
     }
-
-
 }

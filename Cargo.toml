@@ -11,7 +11,7 @@ default = ["miette"]
 glam = "0.29"
 itertools = "0.13"
 thiserror = "2.0"
-miette = { version = "7.4", optional = true }
+miette = { version = "7.4", optional = true, features = ["fancy"]}
 nom = "7.0"
 
 [dev-dependencies]
