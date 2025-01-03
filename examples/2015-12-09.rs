@@ -37,14 +37,44 @@ impl FromStr for Day {
 }
 
 impl Day {
+    fn compute(&self, strategy: PathStrategy) -> Option<u32> {
+        let cities = self.get_unique();
+        let mut overall_result = None;
+    
+        for start in cities.iter() {
+            let mut remaining: HashSet<_> = cities
+                .iter()
+                .filter(|&city| city != start)
+                .copied()
+                .collect();
+            
+            // let mut path_result = None;
 
+            todo!();
+            // (strategy.finder)(self, start, &mut remaining, 0, &mut path_result);
+            
+            // if let Some(path_len) = path_result {
+            //     overall_result = match overall_result {
+            //         None => Some(path_len),
+            //         Some(current) => Some((strategy.compare)(current, path_len))
+            //     };
+            // }
+        }
+        
+        overall_result
+    }
 }
 
 impl Solution for Day {
     type Output = u32;
 
     fn part1(&mut self) -> miette::Result<Self::Output> {
-        let cities = self.get_unique_cities();
+        // Ok(self.compute(PathStrategy {
+        //     finder: Self::find_shortest_path,
+        //     compare: u32::min,
+        // }).expect("No path found"))
+
+        let cities = self.get_unique();
         let mut overall_shortest = None;
     
         // Try each city as a starting point
@@ -71,7 +101,12 @@ impl Solution for Day {
     }
 
     fn part2(&mut self) -> miette::Result<Self::Output> {
-        let cities = self.get_unique_cities();
+        // Ok(self.compute(PathStrategy {
+        //     finder: Self::find_longest_path,
+        //     compare: u32::max,
+        // }).expect("No path found"))
+
+        let cities = self.get_unique();
         let mut overall_longest = None;
     
         // Try each city as a starting point
@@ -85,7 +120,7 @@ impl Solution for Day {
             let mut path_longest = None;
             self.find_longest_path(start, &mut remaining, 0, &mut path_longest);
             
-            // Update overall shortest if this path is longer
+            // Update overall longest if this path is longer
             if let Some(path_len) = path_longest {
                 overall_longest = match overall_longest {
                     None => Some(path_len),
@@ -96,6 +131,11 @@ impl Solution for Day {
         
         Ok(overall_longest.unwrap())
     }
+}
+
+struct PathStrategy {
+    // finder: fn(&Day, &City, &mut HashSet<City>, u32, &mut Option<u32>),
+    compare: fn(u32, u32) -> u32,
 }
 
 fn main() -> miette::Result<()> {

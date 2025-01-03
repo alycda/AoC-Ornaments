@@ -142,9 +142,16 @@ impl FromStr for Day<Part2> {
 impl Solution for Day<Part1> {
     type Output = usize;
 
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        // Ok(self.iter().filter(|&&b| b).count())
+    ///
+    /// Option 1: Explicitly deref using *
+    /// `Ok(self.iter().filter(|&&b| *b).count())`
 
+    /// Option 2: Map to bool first
+    /// `Ok(self.iter().map(|&b| *b).filter(|&b| b).count())`
+
+    /// Option 3: Use as_ref() to get a reference to the inner bool
+    /// `Ok(self.iter().filter(|&b| *b.as_ref()).count())`
+    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         let mut count = 0;
 
         self.walk(|pos| {

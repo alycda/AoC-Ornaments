@@ -14,6 +14,22 @@ impl std::ops::Deref for Day {
     }
 }
 
+impl FromStr for Day {
+    type Err = miette::Error;
+
+    fn from_str(input: &str) -> miette::Result<Self> {
+        let parsed = input.chars().map(|c| {
+            match c {
+                '(' => 1,
+                ')' => -1,
+                _ => 0,
+            }
+        }).collect();
+
+        Ok(Self(parsed))
+    }
+}
+
 impl Solution for Day {
     type Output = i32;
 
@@ -32,22 +48,6 @@ impl Solution for Day {
             .unwrap_or(0);
 
         Ok(output as i32)
-    }
-}
-
-impl FromStr for Day {
-    type Err = miette::Error;
-
-    fn from_str(input: &str) -> miette::Result<Self> {
-        let parsed = input.chars().map(|c| {
-            match c {
-                '(' => 1,
-                ')' => -1,
-                _ => 0,
-            }
-        }).collect();
-
-        Ok(Self(parsed))
     }
 }
 
