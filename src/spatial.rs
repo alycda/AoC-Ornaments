@@ -12,8 +12,36 @@ pub fn manhattan_distance(a: &Position, b: &Position) -> i32 {
 /// a Region or set of Positions
 pub type UniquePositions = HashSet<Position>;
 
+/// Up, Right, Down, Left
+pub const DIRECTIONS: [Position; 4] = [Position::NEG_Y, Position::X, Position::Y, Position::NEG_X];
+
+/// NW, SW, NE, SE
+pub const DIAGONALS: [Position; 4] = [Position::NEG_ONE, Position::new(-1, 1), Position::new(1, -1), Position::ONE];
+
+/// Up, SE, Right, NE, Down, NW, Left, SW
+pub const ALL_DIRECTIONS: [Position; 8] = [Position::NEG_Y, Position::ONE, Position::X, Position::new(1, -1), Position::Y, Position::NEG_ONE, Position::NEG_X, Position::new(-1, 1)];
+
+
 #[derive(Debug)]
-pub struct Grid<T>(Vec<Vec<T>>);
+pub struct Grid<T>(pub Vec<Vec<T>>);
+
+impl FromStr for Grid<char> {
+    type Err = miette::Error;
+
+    fn from_str(input: &str) -> miette::Result<Self> {
+        Ok(Self(input.lines()
+            .map(|line| line.chars().collect()).collect()))
+    }
+}
+
+impl FromStr for Grid<bool> {
+    type Err = miette::Error;
+
+    fn from_str(input: &str) -> miette::Result<Self> {
+        Ok(Self(input.lines()
+            .map(|line| line.chars().map(|c| c == '#').collect()).collect()))
+    }
+}
 
 impl<T> std::ops::Deref for Grid<T> {
     type Target = Vec<Vec<T>>;
@@ -61,6 +89,39 @@ impl<T: std::fmt::Debug + Copy + PartialEq> Grid<T> {
 
         Some(self[pos.y as usize][pos.x as usize])
         // Some(self.get_at_unbounded(pos))
+    }
+
+    /// ORTHOGONAL neighbors. use [Self::get_all_neighbors] for all 8
+    pub fn get_neighbors(&self, pos: Position) -> Vec<(Position, T)> {
+        let mut neighbors = Vec::with_capacity(4);
+
+        for delta in DIRECTIONS.iter() {
+            let new_pos = pos + *delta;
+            
+            // Boundary check matching the working version
+            if new_pos.x >= 0 && new_pos.x < self.get_width() as i32 && 
+               new_pos.y >= 0 && new_pos.y < self.get_height() as i32 {
+                neighbors.push((new_pos, self.get_at_unbounded(new_pos)));
+            }
+        }
+        
+        neighbors
+    }
+
+    pub fn get_all_neighbors(&self, pos: Position) -> Vec<(Position, T)> {
+        let mut neighbors = Vec::with_capacity(8);
+
+        for delta in ALL_DIRECTIONS.iter() {
+            let new_pos = pos + *delta;
+            
+            // Boundary check matching the working version
+            if new_pos.x >= 0 && new_pos.x < self.get_width() as i32 && 
+               new_pos.y >= 0 && new_pos.y < self.get_height() as i32 {
+                neighbors.push((new_pos, self.get_at_unbounded(new_pos)));
+            }
+        }
+        
+        neighbors
     }
 
     pub fn in_bounds(&self, pos: Position) -> bool {

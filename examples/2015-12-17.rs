@@ -41,22 +41,6 @@ impl Solution for Day {
     }
 
     fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        // let base = (1..=self.len())
-        //     .flat_map(|container_size| {
-        //         self.iter().combinations(container_size)
-        //         .filter_map(|combo| {
-        //             if combo.iter().copied().sum::<u32>() == 150 {
-        //                 Some(combo.len())
-        //             } else {
-        //                 None
-        //             }
-        //         })
-        //     })
-        //     .inspect(|combo| {
-        //         dbg!(combo);
-        //     })
-        //     .min().expect("No valid combinations found");
-
         let solutions: Vec<_> = (1..=self.len())
             .map(|size| {
                 // For each size, get count of valid combinations
