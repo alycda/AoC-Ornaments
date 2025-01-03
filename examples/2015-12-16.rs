@@ -23,20 +23,12 @@ impl FromStr for Sue {
     type Err = miette::Error;
 
     fn from_str(input: &str) -> miette::Result<Self> {
-        // let sue = SueBuilder::from(Day::parse_properties(input)?);
-        // Ok(sue.make_sue())
-
         Ok(SueBuilder::from(input.lines().map(|line| {
-            // let (_, sue) = Day::parse_sue(line).unwrap();
             let (_, prop) = Day::parse_property(line).expect("valid input");
 
             // dbg!(prop)
             prop
         }).collect::<Vec<(&str, u32)>>()).make_sue())
-
-        // dbg!(Day::parse_properties(input).expect("ok"));
-
-        // todo!()
     }
 }
 
@@ -136,15 +128,9 @@ impl SueBuilder {
 
 impl From<Vec<(&str, u32)>> for SueBuilder {
     fn from(props: Vec<(&str, u32)>) -> Self {
-        // dbg!(&props);
-
         let mut sue = SueBuilder::new();
 
         props.iter().for_each(|(key, value)| {
-            // match key {
-            //     &"children" => sue.set_value(SueProperties::Children, *value),
-            //     _ => todo!(),
-            // }
             sue.set_value(SueProperties::from_str(key).unwrap(), *value);
         });
 
@@ -156,6 +142,7 @@ impl IntoIterator for SueBuilder {
     type Item = (SueProperties, Option<u32>);
     type IntoIter = std::vec::IntoIter<Self::Item>;
 
+    /// cheating here, we know all the values so we don't need to create a complex enum, just list exhaustively (but the compiler won't catch anything missing)
     fn into_iter(mut self) -> Self::IntoIter {
         vec![
             (SueProperties::Children, self.children.take()),
@@ -172,18 +159,43 @@ impl IntoIterator for SueBuilder {
     }
 }
 
+/// Part 2
+impl PartialEq<SueBuilder> for Sue {
+    fn eq(&self, other: &SueBuilder) -> bool {
+        other.into_iter().filter_map(|item| {
+            if item.1.is_some() {
+                Some((item.0, item.1.unwrap()))
+            } else {
+                None
+            }
+        }).all(|(key, value)| {
+            match key {
+                SueProperties::Children => value == self.children,
+                SueProperties::Cats => value > self.cats,
+                SueProperties::Samoyeds => value == self.samoyeds,
+                SueProperties::Pomeranians => value < self.pomeranians,
+                SueProperties::Akitas => value == self.akitas,
+                SueProperties::Vizslas => value == self.vizslas,
+                SueProperties::Goldfish => value < self.goldfish,
+                SueProperties::Trees => value > self.trees,
+                SueProperties::Cars => value == self.cars,
+                SueProperties::Perfumes => value == self.perfumes,
+            }
+        })
+    }
+}
+
+/// Part 1
 impl PartialEq<Sue> for SueBuilder {
     fn eq(&self, other: &Sue) -> bool {
 
         self.into_iter().filter_map(|item| {
             if item.1.is_some() {
-                Some(item)
+                Some((item.0, item.1.unwrap()))
             } else {
                 None
             }
         }).all(|(key, value)| {
-            let value = value.unwrap();
-
             match key {
                 SueProperties::Children => value == other.children,
                 SueProperties::Cats => value == other.cats,
@@ -216,12 +228,8 @@ impl FromStr for Day {
     type Err = miette::Error;
 
     fn from_str(input: &str) -> miette::Result<Self> {
-        // inefficient for tests, but valid for real input
-        // let sues = Vec::with_capacity(500);
-
         Ok(Self(input.lines().map(|line| {
             let (_, sue) = Day::parse_sue(line).unwrap();
-            // dbg!(sue)
             sue
         }).collect()))
     }
@@ -231,33 +239,21 @@ impl Day {
     fn parse_sue(input: &str) -> IResult<&str, SueBuilder> {
         let (list, _) = take_until(": ")(input)?;
         let (list, _) = preceded(tag(":"), space1)(list)?;
-        // dbg!(list);
 
         let (remainder, props) = Self::parse_properties(list)?;
-        // dbg!(props);
 
         Ok((remainder, SueBuilder::from(props)))
     }
 
     fn parse_properties(input: &str) -> IResult<&str, Vec<(&str, u32)>> {
-        // dbg!(input);
-
-        // let (remainder, props) = 
         separated_list1(
             delimited(space0, tag(","), space1),  // This handles " , " as separator
             Self::parse_property
         )(input)
-
-        // dbg!(remainder, props);
-
-        // todo!()
-        // Ok((remainder, SueBuilder::from(props)))
     }
 
     /// Parse a single property like "cars: 2"
     fn parse_property(input: &str) -> IResult<&str, (&str, u32)> {
-        // dbg!(input);
-
         tuple((
             // Property name
             take_until(": "),
@@ -282,14 +278,33 @@ trees: 3
 cars: 2
 perfumes: 1").expect("ok");
 
-        dbg!(&aunt_sue);
+        // dbg!(&aunt_sue);
 
         let sue = self.iter().position(|sue| {
-            // dbg!(sue);
-            // false
             sue == &aunt_sue
         }).expect("not found"); //.ok_or_else(|| miette::MietteError::from("no solution"));
 
+        Ok(sue + 1)
+    }
+
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+        let aunt_sue = Sue::from_str("children: 3
+cats: 7
+samoyeds: 2
+pomeranians: 3
+akitas: 0
+vizslas: 0
+goldfish: 5
+trees: 3
+cars: 2
+perfumes: 1").expect("ok");
+    
+        // dbg!(&aunt_sue);
+
+        let sue = self.iter().position(|sue| {
+            aunt_sue == *sue
+        }).expect("not found"); //.ok_or_else(|| miette::MietteError::from("no solution"));
+        
         Ok(sue + 1)
     }
 }
@@ -297,10 +312,10 @@ perfumes: 1").expect("ok");
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("./inputs/2015-12-16.txt"))?;
     let part1 = day.solve(Part::One)?;
-    // let part2 = day.solve(Part::Two)?;
+    let part2 = day.solve(Part::Two)?;
 
     println!("Part 1: {}", part1);
-    // println!("Part 2: {}", part2);
+    println!("Part 2: {}", part2);
 
     Ok(())
 }
