@@ -77,76 +77,13 @@ impl Solution for Day {
         Ok(self.sum())
     }
 
-    // fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        // println!("Grid dimensions: {}x{}", self.get_width(), self.get_height());
-
-        // // Print neighbors for each corner
-        // let corners = [
-        //     Position::ZERO,  // Top-left
-        //     Position::new(self.get_width() as i32 - 1, 0), // Top-right
-        //     Position::new(0, self.get_height() as i32 - 1), // Bottom-left
-        //     Position::new(self.get_width() as i32 - 1, self.get_height() as i32 - 1), // Bottom-right
-        // ];
-        
-        // for (i, corner) in corners.iter().enumerate() {
-        //     let neighbors = self.get_all_neighbors(*corner);
-        //     dbg!(&neighbors);
-        //     println!("Corner {} has {} neighbors: {:?}", i, neighbors.len(), 
-        //         neighbors.iter().filter(|(_pos, state)| *state).count());
-        // }
-
-
-        // self.always_on();  // Set initial corners
-        
-        // for (i, corner) in corners.iter().enumerate() {
-        //     let neighbors = self.get_all_neighbors(*corner);
-        //     println!("Corner {} has {} neighbors: {:?}", i, neighbors.len(), 
-        //         neighbors.iter().filter(|(_pos, state)| *state).count());
-        // }
-    
-        // for _ in 0..100 {
-        //     let mut next = Grid(self.clone());  // Start with a copy of current state
-    
-        //     self.walk(|pos| {
-        //         let neighbors = self.get_all_neighbors(pos)
-        //             .iter()
-        //             .filter(|(_pos, state)| *state)
-        //             .count();
-    
-        //         match (self.get_at_unbounded(pos), neighbors) {
-        //             (false, 3) => next.set_at(pos, true),   // Dead -> Alive
-        //             (true, n) if n != 2 && n != 3 => next.set_at(pos, false),  // Alive -> Dead
-        //             _ => None  // Otherwise state stays the same
-        //         }
-        //     });
-    
-        //     self.0 = next;
-        //     self.always_on();  // Force corners on after grid swap
-        // }
-    
-        // Ok(self.sum())
-    // }
-
     fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
         self.always_on();
-        dbg!(self.sum());
-
-        let debug_pos = [Position::ZERO, Position::new(99, 0), Position::new(0, 99), Position::new(99, 99)];
 
         for _ in 0..100 {
-            // self.always_on();
             let mut next = Grid(self.clone());
 
             self.walk(|pos| {
-
-                if debug_pos.contains(&pos) {
-                    // dbg!(pos);
-                    // dbg!(self.get_at_unbounded(pos));
-
-                    assert!(self.get_at_unbounded(pos));
-                }
-
-
                 let neighbors = self.get_all_neighbors(pos).iter().filter(|(_pos, state)| *state).count();
 
                 let light = match (self.get_at_unbounded(pos), neighbors) {
@@ -156,12 +93,10 @@ impl Solution for Day {
                 };
 
                 next.set_at(pos, light);
-                // next.always_on();
             });
 
             self.0 = next;
             self.always_on();
-            dbg!(self.sum());
         }
 
         Ok(self.sum())
@@ -176,7 +111,7 @@ fn main() -> miette::Result<()> {
     let part2 = day.solve(Part::Two)?;
 
     println!("Part 1: {}", part1);
-    println!("Part 2: {}", part2); // > 721
+    println!("Part 2: {}", part2);
 
     Ok(())
 }
