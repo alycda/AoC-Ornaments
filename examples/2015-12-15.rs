@@ -23,7 +23,7 @@ impl FromStr for Properties {
     fn from_str(input: &str) -> miette::Result<Self> {
         let (_, props) = Day::parse_properties(input).map_err(|e| miette::miette!("Failed to parse properties: {}", e))?;
 
-        Ok(props)
+        Ok(props.into())
     }
 }
 
@@ -179,21 +179,19 @@ impl Day {
             tuple((tag(":"), space0))
         )(input)?;
 
-        // dbg!(name, list);
-
         let (remainder, props) = Self::parse_properties(list)?;
-        // dbg!(&remainder);
 
-        Ok((remainder, (name.to_string(), props)))
+        Ok((remainder, (name.to_string(), Properties::from(props))))
     }
 
-    fn parse_properties(input: &str) -> IResult<&str, Properties> {
-        let (remainder, props) = separated_list1(
+    fn parse_properties(input: &str) -> IResult<&str, Vec<(&str, i32)>> {
+        // let (remainder, props) = 
+        separated_list1(
             delimited(space0, tag(","), space0),  // This handles " , " as separator
             Self::parse_property
-        )(input)?;
+        )(input)
 
-        Ok((remainder, Properties::from(props)))
+        // Ok((remainder, Properties::from(props)))
     }
 
     // Parse a single property like "capacity 2"
