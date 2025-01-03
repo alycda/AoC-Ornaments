@@ -21,7 +21,6 @@ pub const DIAGONALS: [Position; 4] = [Position::NEG_ONE, Position::new(-1, 1), P
 /// Up, SE, Right, NE, Down, NW, Left, SW
 pub const ALL_DIRECTIONS: [Position; 8] = [Position::NEG_Y, Position::ONE, Position::X, Position::new(1, -1), Position::Y, Position::NEG_ONE, Position::NEG_X, Position::new(-1, 1)];
 
-
 #[derive(Debug)]
 pub struct Grid<T>(pub Vec<Vec<T>>);
 
