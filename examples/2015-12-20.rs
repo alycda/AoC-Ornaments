@@ -29,10 +29,14 @@ impl FromStr for Day {
     }
 }
 
-impl Day {
-    fn find_first_house(target: usize) -> usize {
-        // Make array big enough - we can estimate size needed
-        let size = target / 10;  // rough estimate
+impl Day { }
+
+impl Solution for Day {
+    type Output = usize;
+
+    fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+        let target = **self;
+        let size = target / 10;
         let mut houses = vec![0; size];
         
         // Each elf visits their multiples
@@ -44,14 +48,16 @@ impl Day {
             
             // Check if this house now has enough
             if houses[elf] >= target {
-                return elf;
+                return Ok(elf);
             }
-        }
-        0
+        };
+
+        miette::bail!("No house found");
     }
-    fn part_2(target: usize) -> usize {
-        // Make array big enough - we can estimate size needed
-        let size = target / 11;  // rough estimate
+
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+        let target = **self;
+        let size = target / 11;
         let mut houses = vec![0; size];
         
         // Each elf visits their multiples
@@ -68,22 +74,11 @@ impl Day {
             
             // Check if this house now has enough
             if houses[elf] >= target {
-                return elf;
+                return Ok(elf);
             }
         }
-        0
-    }
-}
 
-impl Solution for Day {
-    type Output = usize;
-
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        Ok(Self::find_first_house(**self))
-    }
-
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        Ok(Self::part_2(**self))
+        miette::bail!("No house found");
     }
 }
 
