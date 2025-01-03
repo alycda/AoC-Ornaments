@@ -49,55 +49,51 @@ impl Day {
         }
         0
     }
+    fn part_2(target: usize) -> usize {
+        // Make array big enough - we can estimate size needed
+        let size = target / 11;  // rough estimate
+        let mut houses = vec![0; size];
+        
+        // Each elf visits their multiples
+        for elf in 1..size {
+            // Visit only first 50 multiples of this elf
+            let mut visits = 0;
+            for house in (elf..size).step_by(elf) {
+                houses[house] += elf * 11;
+                visits += 1;
+                if visits >= 50 {
+                    break;
+                }
+            }
+            
+            // Check if this house now has enough
+            if houses[elf] >= target {
+                return elf;
+            }
+        }
+        0
+    }
 }
 
 impl Solution for Day {
     type Output = usize;
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        // dbg!(&self);
-
-        // ((self.0 / 40)..=self.0 / 10).into_iter().position(|house| {
-        // // (1..=9).into_iter().position(|house| {
-        //     // let presents = (1..=house).filter(|elf| house % elf == 0).sum::<usize>() * 10;
-        //     // dbg!(presents) >= **self
-
-        //     let mut sum = 0;
-        //     let sqrt = (house as f64).sqrt() as usize;
-        //     for elf in 1..=sqrt {
-        //         if house % elf == 0 {
-        //             sum += elf;
-        //             if elf != house/elf {  // avoid counting sqrt twice for perfect squares
-        //                 sum += house/elf;
-        //             }
-        //         }
-        //     }
-        //     (sum * 10) >= **self
-        // }).ok_or(miette::miette!("no solution")).map(|pos| pos + 1)
-        
-        // // .position(|house| {
-        // //     let presents = (1..=*house).filter(|elf| *house % elf == 0).sum::<usize>() * 10;
-        // //     presents >= *self
-        // // }).unwrap().to_owned().into()
-
-        // // .find(|&house| {
-        // //     let presents = (1..=*house).filter(|elf| *house % elf == 0).sum::<usize>() * 10;
-        // //     presents >= *self
-        // // }).unwrap().to_owned().into();
-
-        // // todo!()
-
         Ok(Self::find_first_house(**self))
+    }
+
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+        Ok(Self::part_2(**self))
     }
 }
 
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("./inputs/2015-12-20.txt"))?;
     let part1 = day.solve(Part::One)?;
-    // let part2 = day.solve(Part::Two)?;
+    let part2 = day.solve(Part::Two)?;
 
-    println!("Part 1: {}", part1); // > 761
-    // println!("Part 2: {}", part2);
+    println!("Part 1: {}", part1);
+    println!("Part 2: {}", part2);
 
     Ok(())
 }
