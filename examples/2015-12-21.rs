@@ -134,24 +134,14 @@ impl Day {
     }
 
     fn simulate_battle(&self, player_stats: Stats, boss_stats: Stats) -> bool {
-        // Add some debug prints
-        println!("Player stats: {:?}", player_stats);
-        println!("Boss stats: {:?}", boss_stats);
-        
         // BUGFIX: Use saturating_sub to prevent underflow
         let player_damage = (player_stats.damage.saturating_sub(boss_stats.armor)).max(1);
         let boss_damage = (boss_stats.damage.saturating_sub(player_stats.armor)).max(1);
-        
-        println!("Player damage per turn: {}", player_damage);
-        println!("Boss damage per turn: {}", boss_damage);
-        
+                
         // Calculate turns needed to win using ceiling division
         let turns_to_kill_boss = (boss_stats.hp + player_damage - 1) / player_damage;
         let turns_to_kill_player = (player_stats.hp + boss_damage - 1) / boss_damage;
-        
-        println!("Turns to kill boss: {}", turns_to_kill_boss);
-        println!("Turns to kill player: {}", turns_to_kill_player);
-        
+                
         turns_to_kill_boss <= turns_to_kill_player
     }
 
@@ -267,14 +257,8 @@ impl Day {
     fn parse_modifier(input: &str) -> IResult<&str, &str> {
         preceded(char('+'), digit1)(input)
     }
-}
 
-impl Solution for Day {
-    type Output = u32;
-
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        // dbg!(&self);
-
+    fn initialize(&mut self) -> miette::Result<()> {
         let input = "Weapons:    Cost  Damage  Armor
 Dagger        8     4       0
 Shortsword   10     5       0
@@ -297,11 +281,17 @@ Defense +1   20     0       1
 Defense +2   40     0       2
 Defense +3   80     0       3";
 
-        let shop = Day::parse_items(input/*, &mut self.1 */)?;
+        self.1 = Day::parse_items(input)?;
 
-        self.1 = shop;
-        // dbg!(&self);
+        Ok(())
+    }
+}
 
+impl Solution for Day {
+    type Output = u32;
+
+    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
+        self.initialize();
         let combos = self.generate_loadouts();
 
         let winning_costs = combos.iter()
@@ -318,15 +308,33 @@ Defense +3   80     0       3";
 
         Ok(winning_costs)
     }
+
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+        self.initialize();
+
+        let losing_costs = self.generate_loadouts().iter()
+            .filter_map(|combo| {
+                let stats = self.calculate_loadout_stats(combo);
+                if !self.simulate_battle(stats, self.2) {
+                    Some(combo.iter().map(|item| item.cost).sum())
+                } else {
+                    None
+                }
+            })
+            .max() // Get the highest cost among losing combinations
+            .ok_or_else(|| miette::miette!("No losing combinations found"))?;
+
+        Ok(losing_costs)
+    }
 }
 
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("./inputs/2015-12-21.txt"))?;
     let part1 = day.solve(Part::One)?;
-    // let part2 = day.solve(Part::Two)?;
+    let part2 = day.solve(Part::Two)?;
 
-    println!("Part 1: {}", part1); // < 189
-    // println!("Part 2: {}", part2);
+    println!("Part 1: {}", part1);
+    println!("Part 2: {}", part2);
 
     Ok(())
 }
