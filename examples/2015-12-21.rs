@@ -3,7 +3,7 @@
 use std::{str::FromStr, vec};
 
 use aoc_ornaments::{Part, Solution, nom::split_newlines};
-use nom::{bytes::complete::{tag, take_until, take_while1}, character::complete::{alpha1, alphanumeric1, char, digit1, multispace0, multispace1, newline, not_line_ending, space0, space1, u32}, combinator::opt, multi::{separated_list0, separated_list1}, sequence::{preceded, terminated, tuple}, IResult};
+use nom::{bytes::complete::{tag, take_until, take_while1}, character::complete::{alpha1, char, digit1, multispace0, multispace1, not_line_ending, space0, space1}, combinator::opt, multi::separated_list1, sequence::{preceded, terminated, tuple}, IResult};
 
 #[derive(Debug, Clone, Copy)]
 struct Stats {
@@ -178,7 +178,7 @@ impl Day {
         todo!()
     }
 
-    fn parse_items(input: &str) -> miette::Result<Vec<Item>> {
+    fn parse_items(input: &str/*, shop: &mut Items */) -> miette::Result<Items> {
         // // let (_, items) = separated_list0(newline::<&str, nom::error::Error<&str>>, not_line_ending)(input)
         // //     .map_err(|e| miette::miette!("Failed to parse items: {}", e))?;
         // let (_, items) = split_newlines(input)?;
@@ -193,15 +193,29 @@ impl Day {
         // //     Ok(Item { cost, damage, armor })
         // // }).collect()
 
+        let mut shop = Items::new();
         let (input, sections) = separated_list1(
             tuple((tag("\n"), multispace0)),
             Self::section
         )(input)
-        .map_err(|e| miette::miette!("Failed to parse sections: {}", e))?;
+            .map_err(|e| miette::miette!("Failed to parse sections: {}", e))?;
 
-        dbg!(sections);
+        dbg!(&sections);
 
-        todo!()
+        for section in sections {
+            let (name, items) = section;
+            // dbg!(&name, &items);
+
+            match name.as_ref() {
+                "Weapons" => shop.weapons = items,
+                "Armor" => shop.armor = items,
+                "Rings" => shop.rings = items,
+                _ => return Err(miette::miette!("Unknown section: {}", name))
+            }
+        }
+
+        // Ok(Items { weapons, armor, rings });
+        Ok(shop)
     }
 
     fn section(input: &str) -> IResult<&str, (String, Vec<Item>)> {
@@ -214,12 +228,13 @@ impl Day {
         
         let (input, _) = Self::header_line(input)?;
 
-        dbg!(section_name, input);
+        // dbg!(section_name, input);
 
         // let (input, items) = separated_list1(tag("\n"), Self::item_line)(input)?;
+        let (input, items) = separated_list1(tag("\n"), Self::parse_item)(input)?;
+        // dbg!(input, &items);
         
-        // Ok((input, (section_name.to_string(), items)))
-        todo!()
+        Ok((input, (section_name.to_string(), items)))
     }
 
     fn header_line(input: &str) -> IResult<&str, ()> {
@@ -276,6 +291,7 @@ impl Day {
     // //     Ok((input, hp as usize))
     // // }
 
+    /// `xyz  X  Y  Z` or `abc +X  Y  Z  A`
     fn parse_item(input: &str) -> IResult<&str, Item> {
         // let (input, (name, modifier)) = Self::parse_item_name(input)?;
         let (input, name) = Self::parse_item_name(input)?;
@@ -288,8 +304,9 @@ impl Day {
     //     tuple((alpha1, opt(preceded(space0, Self::parse_modifier))))(input)
     // }
 
+    /// `abc +X` or `xyz`
     fn parse_item_name(input: &str) -> IResult<&str, String> {
-        let (input, (name, modifier)) = tuple((alpha1, opt(preceded(space0, Self::parse_modifier))))(input)?;
+        let (input, (_, name, modifier)) = tuple((space0, alpha1, opt(preceded(space0, Self::parse_modifier))))(input)?;
 
         if let Some(modifier) = modifier {
             Ok((input, format!("{} +{}", name, modifier)))
@@ -303,12 +320,14 @@ impl Day {
         separated_list1(space1, digit1)(input)
     }
 
+    /// ` X  Y  Z`
     fn parse_nums_to_tuple(input: &str) -> IResult<&str, (&str, &str, &str)> {
         let (remainder, (_, cost, _, damage, _, armor)) = tuple((space0, digit1, space1, digit1, space1, digit1))(input)?;
 
         Ok((remainder, (cost, damage, armor)))
     }
 
+    /// `+X`
     fn parse_modifier(input: &str) -> IResult<&str, &str> {
         preceded(char('+'), digit1)(input)
     }
@@ -318,7 +337,7 @@ impl Solution for Day {
     type Output = u32;
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        dbg!(&self);
+        // dbg!(&self);
 
         let input = "Weapons:    Cost  Damage  Armor
 Dagger        8     4       0
@@ -348,7 +367,10 @@ Defense +3   80     0       3";
         // let (a, b) = separated_list1(tuple((tag("\n"), multispace0::<_, nom::error::Error<_>>)), not_line_ending)(input).expect("invalid input");
         // dbg!(a, b);
 
-        dbg!(Day::parse_items(input));
+        let shop = Day::parse_items(input/*, &mut self.1 */)?;
+
+        self.1 = shop;
+        dbg!(&self);
 
         // let (a, name) = alpha1::<_, nom::error::Error<_>>("Damage +1    25     1       0").expect("invalid input");
         // dbg!(a, &name);
