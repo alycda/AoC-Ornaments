@@ -3,7 +3,8 @@
 use std::{str::FromStr, vec};
 
 use aoc_ornaments::{Part, Solution, nom::split_newlines};
-use nom::{bytes::complete::{tag, take_until, take_while1}, character::complete::{alpha1, char, digit1, multispace0, multispace1, not_line_ending, space0, space1}, combinator::opt, multi::separated_list1, sequence::{preceded, terminated, tuple}, IResult};
+use itertools::Itertools;
+use nom::{bytes::complete::{tag, take_until}, character::complete::{alpha1, char, digit1, multispace0, not_line_ending, space0, space1}, combinator::opt, multi::separated_list1, sequence::{preceded, terminated, tuple}, IResult};
 
 #[derive(Debug, Clone, Copy)]
 struct Stats {
@@ -63,23 +64,10 @@ impl FromStr for Day {
     type Err = miette::Error;
 
     fn from_str(input: &str) -> miette::Result<Self> {
-        // let (_, stats) = separated_list0(newline::<&str, nom::error::Error<&str>>, not_line_ending)(input).expect("invalid input");
-        // dbg!(&stats);
-
-        // dbg!(stats).iter().for_each(|stat| {
-        //     dbg!(Self::parse_stat(stat));
-        // });
-
         let (_, stats) = split_newlines(input)?;
         let boss = Self::parse_stats(&stats)?;
 
-        // let (a, b) = separated_list1::<_, _, _, nom::error::Error<_>, _, _>(tag("\n"), alphanumeric1)(input).expect("invalid input");
-        // if let Ok((a, b)) = separated_list0(newline, not_line_ending)(input) {}
-
-        // let (a, b) = terminated(tag("\n"), digit1)(input).expect("invalid input");
-
-        // todo!();
-
+        // todo: manually derive these default stats
         let player = Stats {
             hp: 100,
             damage: 0,
@@ -91,10 +79,67 @@ impl FromStr for Day {
 }
 
 impl Day {
+    fn generate_loadouts(&self) -> Vec<Vec<&Item>> {
+        let mut loadouts = Vec::new();
+        
+        // First, iterate through required weapons
+        for weapon in &self.1.weapons {
+            // Base loadout with just a weapon
+            loadouts.push(vec![weapon]);
+            
+            // Optional armor combinations
+            for armor in &self.1.armor {
+                loadouts.push(vec![weapon, armor]);
+                
+                // Now handle ring combinations
+                for ring_combo in self.1.rings.iter().combinations(1) {
+                    loadouts.push(vec![weapon, armor, ring_combo[0]]);
+                }
+                for ring_combo in self.1.rings.iter().combinations(2) {
+                    loadouts.push(vec![weapon, armor, ring_combo[0], ring_combo[1]]);
+                }
+            }
+            
+            // Handle rings without armor
+            for ring_combo in self.1.rings.iter().combinations(1) {
+                loadouts.push(vec![weapon, ring_combo[0]]);
+            }
+            for ring_combo in self.1.rings.iter().combinations(2) {
+                loadouts.push(vec![weapon, ring_combo[0], ring_combo[1]]);
+            }
+        }
+        
+        loadouts
+    }
+
+    fn calculate_loadout_stats(&self, loadout: &[&Item]) -> Stats {
+        let mut stats = self.0.clone(); // Start with base player stats
+        
+        // Add up all damage and armor from equipment
+        for item in loadout {
+            stats.damage += item.damage;
+            stats.armor += item.armor;
+        }
+        
+        stats
+    }
+
+    fn simulate_battle(&self, player_stats: Stats, boss_stats: Stats) -> bool {
+        // Calculate damage per turn (minimum 1)
+        let player_damage = (player_stats.damage - boss_stats.armor).max(1);
+        let boss_damage = (boss_stats.damage - player_stats.armor).max(1);
+        
+        // Calculate turns needed to win
+        let turns_to_kill_boss = (boss_stats.hp + player_damage - 1) / player_damage;
+        let turns_to_kill_player = (player_stats.hp + boss_damage - 1) / boss_damage;
+        
+        // Player goes first, so they win ties
+        turns_to_kill_boss <= turns_to_kill_player
+    }
+
     fn parse_stat(input: &str) -> IResult<&str, (&str, u32)> {
         let (input, (key, _, _, number)) = tuple((
             // Parse the key (e.g. "Hit Points")
-            // terminated(alpha1, space0),
             terminated(take_until(":"), space0),
             tag(":"),
             space0,
@@ -129,70 +174,7 @@ impl Day {
         Ok(stats)
     }
 
-    fn parse_weapons(input: &str) -> IResult<&str, Weapon> {
-        Self::parse_item(input);
-
-        todo!()
-    }
-
-    fn parse_armor(input: &str) -> IResult<&str, Armor> {
-        Self::parse_item(input);
-
-        todo!()
-    }
-
-    // fn parse_item(input: &str) -> IResult<&str, (&str, u32, u32, u32)> {
-    //     todo!()
-    // }
-
-    fn parse_rings(input: &str) {
-        todo!()
-    }
-
-    ///
-    /// ```rust
-    /// #[test]
-    /// fn test() {
-    /// let (_, damage_ring) = parse_ring("Damage +1    25     1       0");
-    /// let (_, defense_ring) = parse_ring("Defense +3   80     0       3");
-    /// 
-    /// assert_eq!(damage_ring, Item { name: "Damage +1".to_string(), cost: 25, damage: 1, armor: 0 });
-    /// assert_eq!(defense_ring, Item { name: "Defense +3".to_string(), cost: 80, damage: 0, armor: 3 });
-    /// }
-    /// ```
-    fn parse_ring(input: &str) -> IResult<&str, Item> {
-        let (input, (name, _, cost, _, damage, _, armor)) = tuple((
-            // Name: take characters until we hit multiple spaces
-            take_while1(|c| c != ' '),
-            multispace1,
-            // Numbers separated by spaces
-            digit1,
-            multispace1,
-            digit1,
-            multispace1,
-            digit1
-        ))(input)?;
-
-        dbg!(&name, cost, damage, armor);
-
-        todo!()
-    }
-
-    fn parse_items(input: &str/*, shop: &mut Items */) -> miette::Result<Items> {
-        // // let (_, items) = separated_list0(newline::<&str, nom::error::Error<&str>>, not_line_ending)(input)
-        // //     .map_err(|e| miette::miette!("Failed to parse items: {}", e))?;
-        // let (_, items) = split_newlines(input)?;
-
-        // dbg!(&items);
-
-        // // items.iter().map(|item| {
-        // //     let parts: Vec<&str> = item.split_whitespace().collect();
-        // //     let cost = parts[0].parse().unwrap();
-        // //     let damage = parts[1].parse().unwrap();
-        // //     let armor = parts[2].parse().unwrap();
-        // //     Ok(Item { cost, damage, armor })
-        // // }).collect()
-
+    fn parse_items(input: &str) -> miette::Result<Items> {
         let mut shop = Items::new();
         let (input, sections) = separated_list1(
             tuple((tag("\n"), multispace0)),
@@ -200,11 +182,10 @@ impl Day {
         )(input)
             .map_err(|e| miette::miette!("Failed to parse sections: {}", e))?;
 
-        dbg!(&sections);
+        // dbg!(&sections);
 
         for section in sections {
             let (name, items) = section;
-            // dbg!(&name, &items);
 
             match name.as_ref() {
                 "Weapons" => shop.weapons = items,
@@ -213,13 +194,10 @@ impl Day {
                 _ => return Err(miette::miette!("Unknown section: {}", name))
             }
         }
-
-        // Ok(Items { weapons, armor, rings });
         Ok(shop)
     }
 
     fn section(input: &str) -> IResult<&str, (String, Vec<Item>)> {
-        // dbg!(input);
 
         let (input, (section_name, _)) = tuple((
             terminated(take_until(":"), tag(":")),
@@ -228,11 +206,7 @@ impl Day {
         
         let (input, _) = Self::header_line(input)?;
 
-        // dbg!(section_name, input);
-
-        // let (input, items) = separated_list1(tag("\n"), Self::item_line)(input)?;
         let (input, items) = separated_list1(tag("\n"), Self::parse_item)(input)?;
-        // dbg!(input, &items);
         
         Ok((input, (section_name.to_string(), items)))
     }
@@ -245,52 +219,6 @@ impl Day {
         Ok((input, ()))
     }
 
-    // ///
-    // /// ```rust
-    // /// let (_, item) = item_line("");
-    // /// ```
-    // fn item_line(input: &str) -> IResult<&str, Item> {
-    //     // let (input, (name, _, cost, _, damage, _, armor)) = tuple((
-    //     //     // Name: take characters until we hit multiple spaces
-    //     //     take_while1(|c| c != ' ' || c != '+'),
-    //     //     multispace1,
-    //     //     // Numbers separated by spaces
-    //     //     digit1,
-    //     //     multispace1,
-    //     //     digit1,
-    //     //     multispace1,
-    //     //     digit1
-    //     // ))(input)?;
-
-    //     let (input, name) = take_while1(|c| c != ' ')(input.trim())?;
-    //     let (input, numbers) = preceded(
-    //         multispace1,
-    //         separated_list1(
-    //             multispace1,
-    //             digit1
-    //         )
-    //     )(input.trim())?;
-
-    //     assert_eq!(numbers.len(), 3);
-    
-    //     Ok((input, Item {
-    //         name: name.trim().to_string(),
-    //         cost: numbers[0].parse().unwrap(),
-    //         damage: numbers[1].parse().unwrap(),
-    //         armor: numbers[2].parse().unwrap(),
-    //     }))
-    // }
-
-    // // fn parse_hp(input: &str) -> IResult<&str, usize> {
-    // //     dbg!(input);
-    // //     let (input, _) = tag("Hit Points: ")(input)?;
-    // //     dbg!(input);
-
-    // //     let (input, hp) = u32(input)?;
-
-    // //     Ok((input, hp as usize))
-    // // }
-
     /// `xyz  X  Y  Z` or `abc +X  Y  Z  A`
     fn parse_item(input: &str) -> IResult<&str, Item> {
         // let (input, (name, modifier)) = Self::parse_item_name(input)?;
@@ -299,10 +227,6 @@ impl Day {
 
         Ok((input, Item::new(name, cost, damage, armor)))
     }
-
-    // fn parse_item_name(input: &str) -> IResult<&str, (&str, Option<&str>)> {
-    //     tuple((alpha1, opt(preceded(space0, Self::parse_modifier))))(input)
-    // }
 
     /// `abc +X` or `xyz`
     fn parse_item_name(input: &str) -> IResult<&str, String> {
@@ -313,11 +237,6 @@ impl Day {
         } else {
             Ok((input, name.to_string()))
         }
-    }
-
-    #[deprecated]
-    fn parse_nums_to_vec(input: &str) -> IResult<&str, Vec<&str>> {
-        separated_list1(space1, digit1)(input)
     }
 
     /// ` X  Y  Z`
@@ -361,60 +280,31 @@ Defense +1   20     0       1
 Defense +2   40     0       2
 Defense +3   80     0       3";
 
-        // let (a, b) = Self::header_line("Weapons:    Cost  Damage  Armor").expect("invalid input");
-        // dbg!(a, b);
-
-        // let (a, b) = separated_list1(tuple((tag("\n"), multispace0::<_, nom::error::Error<_>>)), not_line_ending)(input).expect("invalid input");
-        // dbg!(a, b);
-
         let shop = Day::parse_items(input/*, &mut self.1 */)?;
 
         self.1 = shop;
-        dbg!(&self);
+        // dbg!(&self);
 
-        // let (a, name) = alpha1::<_, nom::error::Error<_>>("Damage +1    25     1       0").expect("invalid input");
-        // dbg!(a, &name);
+        let combos = self.generate_loadouts();
 
-        // // let (a, b) = preceded(char::<_, nom::error::Error<_>>('+'), digit1)(a).expect("invalid input");
-        // let (a, modifier) = preceded(tuple((space0, char::<_, nom::error::Error<_>>('+'), space0)), digit1)(a).expect("invalid input");
-        // dbg!(a, modifier);
+        for combo in combos {
+            let stats = self.calculate_loadout_stats(&combo);
+            if self.simulate_battle(stats, self.2) {
+                return Ok(combo.iter().map(|item| item.cost).sum());
+            }
+        }
 
-        // // let (a, b) = tuple((space1, digit1, space1, digit1, space1, digit1))(a).expect("invalid input");
-        // let (a, b) = preceded(space0, separated_list1(space1::<_, nom::error::Error<_>>, digit1))(a).expect("invalid input");
-        // dbg!(a, b);
-
-        // let (a, b) = alpha1::<_, nom::error::Error<_>>("Leather      13     0       1").expect("invalid input");
-        // dbg!(a, b);
-        // let (a, b) = alpha1::<_, nom::error::Error<_>>("Greataxe     74     8       0").expect("invalid input");
-        // dbg!(a, b);
-
-
-
-        // let (a, b) = tuple((alpha1::<_, nom::error::Error<_>>, opt(preceded(space0, preceded(char('+'), digit1)))))("Defense +3   80     0       3").expect("invalid input");
-        // dbg!(a, b);
-        // let (a, b) = tuple((alpha1::<_, nom::error::Error<_>>, opt(preceded(space0, Self::parse_modifier))))("Platemail   102     0       5").expect("invalid input");
-        // dbg!(a, b);
-
-        // let (a, b) = dbg!(Self::parse_item_name("Defense +2   40     0       2")).expect("ok");
-        // // dbg!(Self::parse_nums_to_vec(a));
-        // let (a, b) = dbg!(Self::parse_item_name("Warhammer    25     6       0")).expect("ok");
-        // dbg!(Self::parse_nums_to_tuple(a));
-
-        dbg!(Self::parse_item("Dagger        8     4       0").expect("ok"));
-        dbg!(Self::parse_item("Leather      13     0       1").expect("ok"));
-        dbg!(Self::parse_item("Damage +1    25     1       0").expect("ok"));
-
-        todo!()
+        Err(miette::miette!("No solution found"))
     }
 }
 
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("./inputs/2015-12-21.txt"))?;
     let part1 = day.solve(Part::One)?;
-    let part2 = day.solve(Part::Two)?;
+    // let part2 = day.solve(Part::Two)?;
 
-    println!("Part 1: {}", part1);
-    println!("Part 2: {}", part2);
+    println!("Part 1: {}", part1); // < 189
+    // println!("Part 2: {}", part2);
 
     Ok(())
 }
