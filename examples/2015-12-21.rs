@@ -92,20 +92,29 @@ impl Day {
                 loadouts.push(vec![weapon, armor]);
                 
                 // Now handle ring combinations
-                for ring_combo in self.1.rings.iter().combinations(1) {
-                    loadouts.push(vec![weapon, armor, ring_combo[0]]);
+                // Use combinations instead of permutations to avoid duplicates
+                for ring in &self.1.rings {
+                    loadouts.push(vec![weapon, armor, ring]);
                 }
-                for ring_combo in self.1.rings.iter().combinations(2) {
-                    loadouts.push(vec![weapon, armor, ring_combo[0], ring_combo[1]]);
+                
+                // For two rings, we need to ensure we don't pick the same ring twice
+                for (i, ring1) in self.1.rings.iter().enumerate() {
+                    for ring2 in self.1.rings.iter().skip(i + 1) {  // skip(i + 1) ensures we don't reuse rings
+                        loadouts.push(vec![weapon, armor, ring1, ring2]);
+                    }
                 }
             }
             
             // Handle rings without armor
-            for ring_combo in self.1.rings.iter().combinations(1) {
-                loadouts.push(vec![weapon, ring_combo[0]]);
+            for ring in &self.1.rings {
+                loadouts.push(vec![weapon, ring]);
             }
-            for ring_combo in self.1.rings.iter().combinations(2) {
-                loadouts.push(vec![weapon, ring_combo[0], ring_combo[1]]);
+            
+            // Two rings without armor
+            for (i, ring1) in self.1.rings.iter().enumerate() {
+                for ring2 in self.1.rings.iter().skip(i + 1) {
+                    loadouts.push(vec![weapon, ring1, ring2]);
+                }
             }
         }
         
@@ -125,15 +134,24 @@ impl Day {
     }
 
     fn simulate_battle(&self, player_stats: Stats, boss_stats: Stats) -> bool {
-        // Calculate damage per turn (minimum 1)
-        let player_damage = (player_stats.damage - boss_stats.armor).max(1);
-        let boss_damage = (boss_stats.damage - player_stats.armor).max(1);
+        // Add some debug prints
+        println!("Player stats: {:?}", player_stats);
+        println!("Boss stats: {:?}", boss_stats);
         
-        // Calculate turns needed to win
+        // BUGFIX: Use saturating_sub to prevent underflow
+        let player_damage = (player_stats.damage.saturating_sub(boss_stats.armor)).max(1);
+        let boss_damage = (boss_stats.damage.saturating_sub(player_stats.armor)).max(1);
+        
+        println!("Player damage per turn: {}", player_damage);
+        println!("Boss damage per turn: {}", boss_damage);
+        
+        // Calculate turns needed to win using ceiling division
         let turns_to_kill_boss = (boss_stats.hp + player_damage - 1) / player_damage;
         let turns_to_kill_player = (player_stats.hp + boss_damage - 1) / boss_damage;
         
-        // Player goes first, so they win ties
+        println!("Turns to kill boss: {}", turns_to_kill_boss);
+        println!("Turns to kill player: {}", turns_to_kill_player);
+        
         turns_to_kill_boss <= turns_to_kill_player
     }
 
@@ -176,13 +194,12 @@ impl Day {
 
     fn parse_items(input: &str) -> miette::Result<Items> {
         let mut shop = Items::new();
-        let (input, sections) = separated_list1(
+        let (_, sections) = separated_list1(
             tuple((tag("\n"), multispace0)),
             Self::section
         )(input)
             .map_err(|e| miette::miette!("Failed to parse sections: {}", e))?;
 
-        // dbg!(&sections);
 
         for section in sections {
             let (name, items) = section;
@@ -287,14 +304,19 @@ Defense +3   80     0       3";
 
         let combos = self.generate_loadouts();
 
-        for combo in combos {
-            let stats = self.calculate_loadout_stats(&combo);
-            if self.simulate_battle(stats, self.2) {
-                return Ok(combo.iter().map(|item| item.cost).sum());
-            }
-        }
+        let winning_costs = combos.iter()
+            .filter_map(|combo| {
+                let stats = self.calculate_loadout_stats(combo);
+                if self.simulate_battle(stats, self.2) {
+                    Some(combo.iter().map(|item| item.cost).sum())
+                } else {
+                    None
+                }
+            })
+            .min() // Get the lowest cost among winning combinations
+            .ok_or_else(|| miette::miette!("No winning combinations found"))?;
 
-        Err(miette::miette!("No solution found"))
+        Ok(winning_costs)
     }
 }
 
