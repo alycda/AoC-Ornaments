@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 pub mod bits;
 pub mod linear;
+pub mod nom;
 pub mod spatial;
 
 /// Shared behavior amongst AOC/Everybody.codes solutions
