@@ -3,7 +3,6 @@
 use std::{str::FromStr, vec};
 
 use aoc_ornaments::{Part, Solution, nom::split_newlines};
-use itertools::Itertools;
 use nom::{bytes::complete::{tag, take_until}, character::complete::{alpha1, char, digit1, multispace0, not_line_ending, space0, space1}, combinator::opt, multi::separated_list1, sequence::{preceded, terminated, tuple}, IResult};
 
 #[derive(Debug, Clone, Copy)]
@@ -291,7 +290,7 @@ impl Solution for Day {
     type Output = u32;
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        self.initialize();
+        self.initialize().expect("not ok");
         let combos = self.generate_loadouts();
 
         let winning_costs = combos.iter()
@@ -310,7 +309,7 @@ impl Solution for Day {
     }
 
     fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        self.initialize();
+        self.initialize().expect("ok");
 
         let losing_costs = self.generate_loadouts().iter()
             .filter_map(|combo| {
