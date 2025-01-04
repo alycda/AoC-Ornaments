@@ -3,10 +3,13 @@
 use std::str::FromStr;
 
 use aoc_ornaments::{Part, Solution};
-use nom::{bytes::complete::{tag, take_until}, character::complete::{u32, space0}, sequence::{terminated, tuple}, IResult};
+use nom::{branch::alt, bytes::complete::{tag, take_until}, character::complete::{not_line_ending, space0, u32}, combinator::{map, opt}, multi::separated_list1, sequence::{terminated, tuple}, IResult};
 
 #[derive(Debug)]
-struct Player {}
+struct Player {
+    hp: u32,
+    mana: u32,
+}
 
 #[derive(Debug)]
 struct Boss {
@@ -26,8 +29,10 @@ impl Boss {
 /// cast
 #[derive(Debug)]
 struct Spell {
-    cost: usize,
-    damage: usize,
+    name: String,
+    cost: u32,
+    /// instant
+    damage: u32,
     effect: Option<Effect>,
 }
 
@@ -39,9 +44,13 @@ impl Spell {
 
 #[derive(Debug)]
 enum Effect {
-    Armor(usize),
-    Damage(usize),
-    Mana(usize),
+    /// duration, effect
+    Armor(usize, u32),
+    /// duration, effect. duration may be 0 for instant damage
+    Damage(usize, u32),
+    /// duration, effect
+    Mana(usize, u32),
+    Heal(u32),
 }
 
 // #[derive(Debug)]
@@ -63,7 +72,7 @@ impl FromStr for Day {
             .map_err(|e| miette::miette!(e.to_owned()))?;
         
 
-        Ok(Self(Player {}, vec![], boss))
+        Ok(Self(Player { hp: 50, mana: 500 }, vec![], boss))
     }
 }
 
@@ -109,28 +118,172 @@ impl Day {
     }
 
     fn parse_spell(input: &str) -> IResult<&str, Spell> {
+        // dbg!(input);
+
+        let mut damage = 0;
+        let mut effect = None;
+
+        let (input, (name, _, cost, _, description)) = tuple((
+            take_until(" costs"),    // Spell name
+            tag(" costs "),         // Literal "costs" with spaces
+            u32, // Mana cost as number
+            tag(" mana. "),         // Literal "mana."
+            not_line_ending                    // Rest of the description
+        ))(input)?;
+
+        // dbg!(name, cost, description);
+
+        let (_, effects) = Self::parse_effect(description)?;
+        // dbg!(&effects);
+        // dbg!(&effects[0]);
+        // dbg!(&effects[1]);
+        
+        // let damage = match &effects[0] {
+        //     Effect::Damage(_, damage) => *damage,
+        //     _ => panic!("Expected damage effect"),
+        // };
+
+        for eff in effects {
+            match eff {
+                Effect::Damage(_, d) => damage = d,
+                any => effect = Some(any),
+                // Effect::Heal(d) => effect = Some(Effect)
+                // _ => unimplemented!("this parser only handles instant damage and healing")
+            }
+        }
+
+        // let (input, b) = tuple((not_line_ending, tag(" costs "), not_line_ending))(input)?;
+        // dbg!(b);
+
+        // // let (input, (_, cost, _, damage)) = tuple((
+        // //     // Parse the key (e.g. "Hit Points")
+        // //     terminated(take_until(" "), space0),
+        // //     u32,
+        // //     tag("mana."),
+        // //     u32,
+        // // ))(input)?;
+
+        // // Ok((input, Attack { cost: cost as usize, damage: damage as usize, effect: None }))
+
+        Ok((input, Spell { name: name.to_string(), cost, damage, effect }))
+    }
+
+    fn parse_effect(input: &str) -> IResult<&str, Vec<Effect>> {
         dbg!(input);
+        alt((Self::instant_damage, Self::duration_effect))(input)
+    }
 
-        // let (input, (_, cost, _, damage)) = tuple((
-        //     // Parse the key (e.g. "Hit Points")
-        //     terminated(take_until(" "), space0),
-        //     u32,
-        //     tag("mana."),
-        //     u32,
-        // ))(input)?;
+    fn instant_damage(input: &str) -> IResult<&str, Vec<Effect>> {
+        let (input, _) = tag("It instantly does ")(input)?;
+        let (input, damage) = u32(input)?;
+        let (input, _) = tag(" damage")(input)?;
+        
+        // Optional healing part
+        let (input, heal) = opt(tuple((
+            tag(" and heals you for "),
+            u32,
+            tag(" hit points")
+        )))(input)?;
 
-        // Ok((input, Attack { cost: cost as usize, damage: damage as usize, effect: None }))
+        // dbg!(damage, heal);
 
-        todo!()
+        let mut effects = vec![Effect::Damage(0, damage)];
+
+        if let Some((_, heal, _)) = heal {
+            effects.push(Effect::Heal(heal));
+        }
+
+        Ok((input, effects))
+    }
+
+    fn duration_effect(input: &str) -> IResult<&str, Vec<Effect>> {
+        let (input, _) = tag("It starts an effect that lasts for ")(input)?;
+
+        let (input, turns) = u32(input)?;
+        let (input, _) = tag(" turns")(input)?;
+
+        // dbg!(turns);
+        let (input, effect) = Self::flexible_duration_effect_parser(input, turns as usize)?;
+        // dbg!(&effect);
+
+        Ok((input, vec![effect]))
+    }
+
+    // More flexible duration effect parser that looks for key patterns
+    fn flexible_duration_effect_parser(input: &str, turns: usize) -> IResult<&str, Effect> {
+        let (remaining, effect) = alt((
+            // Shield: look for "armor" keyword
+            map(
+                Self::effect_value_parser("armor"),
+                |value| Effect::Armor(turns, value)
+            ),
+            // Poison: look for "damage" with optional "deals" prefix
+            map(
+                Self::effect_value_parser("damage"),
+                |value| Effect::Damage(turns, value)
+            ),
+            // Recharge: look for "mana" with optional "gives" prefix
+            map(
+                Self::effect_value_parser("mana"),
+                |value| Effect::Mana(turns, value)
+            )
+        ))(input)?;
+
+        // Consume the rest of the line without caring about exact wording
+        let (input, _) = not_line_ending(remaining)?;
+        Ok((input, effect))
+    }
+
+    // More accurately: finds a keyword and then extracts a nearby number
+    fn effect_value_parser(keyword: &'static str) -> impl Fn(&str) -> IResult<&str, u32> {
+        move |input: &str| {
+            // First find the keyword
+            let (input, _) = take_until(keyword)(input)?;
+            let (input, _) = tag(keyword)(input)?;
+            // Now find the next number, skipping any text in between
+            let (input, _) = Self::take_until_number(input)?;
+            let (input, value) = u32(input)?;
+            
+            Ok((input, value))
+        }
+    }
+
+    // Helper to skip until we find a digit
+    fn take_until_number(input: &str) -> IResult<&str, &str> {
+        Self::take_until_matching(input, |c| c.is_ascii_digit())
+    }
+
+    // Generic helper to take until a condition is met
+    fn take_until_matching<F>(input: &str, condition: F) -> IResult<&str, &str>
+    where 
+        F: Fn(char) -> bool,
+    {
+        let pos = input.find(|c| condition(c))
+            .ok_or_else(|| nom::Err::Error(nom::error::Error::new(input, nom::error::ErrorKind::TakeUntil)))?;
+        Ok((&input[pos..], &input[..pos]))
     }
 
     fn parse_spells(input: &str) -> IResult<&str, Vec<Spell>> {
-        let (input, spells) = Self::parse_spell(input)?;
-        dbg!(input, spells);
+        let (input, spells) = separated_list1(tag("\n"), Self::parse_spell)(input)?;
 
-        todo!();
+        // let (input, name) = take_until(" costs")(input)?;
+        // dbg!(&name);
+        // let (input, _) = tag(" costs ")(input)?;
+        // // let (input, cost) = map_res(digit1, str::parse)(input)?;
+        // let (input, cost) = u32(input)?;
+        // dbg!(&cost);
+        // let (input, _) = tag(" mana. ")(input)?;
+        // let (input, description) = rest(input)?;
+        // dbg!(&description);
 
-        // Ok((input, spells))
+        // let (input, spells) = separated_list1(tag("\n"), Self::parse_spell)(input)?;
+
+        // // let (input, spells) = Self::parse_spell(input)?;
+        // dbg!(&spells);
+
+        // todo!();
+
+        Ok((input, spells))
     }
 
     fn init_spells(&mut self) -> miette::Result<()> {
@@ -140,9 +293,10 @@ Shield costs 113 mana. It starts an effect that lasts for 6 turns. While it is a
 Poison costs 173 mana. It starts an effect that lasts for 6 turns. At the start of each turn while it is active, it deals the boss 3 damage.
 Recharge costs 229 mana. It starts an effect that lasts for 5 turns. At the start of each turn while it is active, it gives you 101 new mana.";
 
-        Self::parse_spells(input).map_err(|e| miette::miette!(e.to_owned()))?;
+        let (_, spells) = Self::parse_spells(input).map_err(|e| miette::miette!(e.to_owned()))?;
+        self.1 = spells;
 
-        todo!()
+        Ok(())
     }
 }
 
