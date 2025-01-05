@@ -246,12 +246,19 @@ impl Day {
 
     // More accurately: finds a keyword and then extracts a nearby number
     fn effect_value_parser(keyword: &'static str) -> impl Fn(&str) -> IResult<&str, u32> {
-        move |input: &str| {
+        move |original_input: &str| {
+            dbg!(original_input);
+
             // First find the keyword
-            let (input, _) = take_until(keyword)(input)?;
+            let (input, _) = take_until(keyword)(original_input)?;
+            // dbg!(input);
+
             let (input, _) = tag(keyword)(input)?;
+
+            // dbg!(input);
+
             // Now find the next number, skipping any text in between
-            let (input, _) = Self::take_until_number(input)?;
+            let (input, _) = Self::take_until_number(original_input)?;
             let (input, value) = u32(input)?;
             
             Ok((input, value))
