@@ -91,30 +91,28 @@ impl Day {
     }
 
     fn parse_spell(input: &str) -> IResult<&str, Spell> {
-        // dbg!(input);
-
         let mut damage = 0;
         let mut effect = None;
-
+    
         let (input, (name, _, cost, _, description)) = tuple((
-            take_until(" costs"),    // Spell name
-            tag(" costs "),         // Literal "costs" with spaces
-            u32, // Mana cost as number
-            tag(" mana. "),         // Literal "mana."
-            not_line_ending                    // Rest of the description
+            take_until(" costs"),    
+            tag(" costs "),         
+            u32, 
+            tag(" mana. "),         
+            not_line_ending                    
         ))(input)?;
-
-        // dbg!(name, cost, description);
-
+    
         let (_, effects) = Self::parse_effect(description)?;
-
+    
         for eff in effects {
             match eff {
-                Effect::Damage(_, d) => damage = d,
+                // Only set damage for instant damage effects
+                Effect::Damage(0, d) => damage = d,
+                // Otherwise store it as an effect
                 any => effect = Some(any),
             }
         }
-
+    
         Ok((input, Spell { name: name.to_string(), cost, damage, effect }))
     }
 
@@ -362,25 +360,28 @@ impl Day {
         while !state.is_game_over() {
             // Apply effects at start of turn
             state.apply_effects();
-            if state.is_game_over() {
-                break;
+            if state.boss.hp == 0 {
+                return Some(state.mana_spent);
             }
             
-            // Choose spell with some strategy
             let valid_spells = state.get_valid_spells(&self.1);
             if valid_spells.is_empty() {
                 return None;
             }
             
-            // Apply heuristics similar to Ruby version
-            let spell = if !state.has_armor() && rng.gen_bool(0.6) {
-                valid_spells.iter().find(|s| s.name == "Shield")
-            } else if state.player.mana < 400 && state.boss.hp > 10 && rng.gen_bool(0.6) {
+            // Improved strategy weights
+            let spell = if state.player.mana < 300 && !state.effects.iter().any(|(e, _)| matches!(e, Effect::Mana(..))) {
                 valid_spells.iter().find(|s| s.name == "Recharge")
-            } else if !state.has_poison() && rng.gen_bool(0.6) {
+            } else if state.player.hp < 20 && !state.has_armor() {
+                valid_spells.iter().find(|s| s.name == "Shield")
+            } else if !state.effects.iter().any(|(e, _)| matches!(e, Effect::Damage(..))) {
                 valid_spells.iter().find(|s| s.name == "Poison")
             } else {
-                Some(&valid_spells[rng.gen_range(0..valid_spells.len())])
+                // Prefer lower cost spells when possible
+                let weighted_spells: Vec<_> = valid_spells.iter()
+                    .filter(|s| s.cost <= state.player.mana)
+                    .collect();
+                weighted_spells.get(rng.gen_range(0..weighted_spells.len())).map(|v| &**v)
             };
             
             if let Some(spell) = spell {
@@ -392,23 +393,28 @@ impl Day {
             }
             
             // Process boss turn
-            if !state.process_boss_turn() {
+            state.apply_effects();
+            if state.boss.hp == 0 {
+                return Some(state.mana_spent);
+            }
+            
+            if !state.process_boss_turn() || state.player.hp == 0 {
                 return None;
             }
         }
         
-        if state.boss.hp <= 0 {
+        if state.boss.hp == 0 {
             Some(state.mana_spent)
         } else {
             None
         }
     }
-    
+
     fn find_least_mana_monte_carlo(&self) -> Option<u32> {
         let mut rng = rand::thread_rng();
         let mut min_mana: Option<u32> = None;
         
-        for _ in 0..100_000 {
+        for _ in 0..500_000 {
             if let Some(mana) = self.simulate_random_battle(&mut rng) {
                 min_mana = Some(min_mana.map_or(mana, |m| m.min(mana)));
             }
