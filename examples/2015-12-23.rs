@@ -3,7 +3,7 @@
 use std::str::FromStr;
 
 use aoc_ornaments::{nom::split_newlines, Part, Solution};
-use nom::{branch::alt, bytes::complete::tag, character::{complete::{alpha1, digit1, not_line_ending, space0, space1}, streaming::line_ending}, combinator::{map, opt}, error::{VerboseError, VerboseErrorKind}, sequence::tuple};
+use nom::{branch::alt, bytes::complete::tag, character::{complete::{alpha1, digit1, not_line_ending, space0, space1}, streaming::line_ending}, combinator::{map, opt}, error::{VerboseError, VerboseErrorKind}, sequence::tuple, IResult};
 
 #[derive(Debug)]
 struct Day {
@@ -28,11 +28,62 @@ enum Instruction {
     JumpIfOne(char, i32),
 }
 
+impl Instruction {
+    fn parse_number(input: &str) -> IResult<&str, i32> {
+        let (input, (_, sign, number)) = tuple((
+            space0, 
+            alt((tag("+"), tag("-"))),
+            digit1
+        ))(input)?;
+
+        let number = format!("{}{}", sign, number).parse().unwrap();
+        Ok((input, number))
+    }
+
+    fn parse_instruction(input: &str) -> IResult<&str, Instruction> {
+        let (input, instruction) = alpha1(input)?;
+
+        if let "jmp" = instruction {
+            let (input, offset) = Self::parse_number(input)?;
+            return Ok((input, Self::Jump(offset)));
+        }
+
+        let (input, _) = space1(input)?;
+        let (input, register) = alpha1(input)?;
+
+        match instruction {
+            "hlf" => Ok((input, Self::Half(register.chars().next().unwrap()))),
+            "tpl" => Ok((input, Self::Triple(register.chars().next().unwrap()))),
+            "inc" => Ok((input, Self::Increment(register.chars().next().unwrap()))),
+            "jie" => {
+                let (input, _) = tuple((tag(","), space0))(input)?;
+                let (input, offset) = Self::parse_number(input)?;
+                Ok((input, Self::JumpIfEven(register.chars().next().unwrap(), offset)))
+            },
+            "jio" => {
+                let (input, _) = tuple((tag(","), space0))(input)?;
+                let (input, offset) = Self::parse_number(input)?;
+                Ok((input, Self::JumpIfOne(register.chars().next().unwrap(), offset)))
+            },
+            _ => todo!(),
+        }
+    }
+
+    fn parse_3(input: &str) -> IResult<&str, ()> {
+        todo!()
+    }
+}
+
 impl FromStr for Instruction {
     type Err = miette::Error;
 
     fn from_str(input: &str) -> miette::Result<Self> {
-        dbg!(input);
+        // dbg!(input);
+
+        let (_, instruction) = Instruction::parse_instruction(input)
+            .map_err(|e| miette::miette!(e.to_owned()))?;
+
+        Ok(instruction)
 
         // let (_, b) = tuple((alpha1, space1, 
         //     alt((alpha1, tuple((opt(tag("+"), tag("-")), digit1)))), 
@@ -62,29 +113,29 @@ impl FromStr for Instruction {
         //     ))
         // ))(input).map_err(|e| miette::miette!(e.to_owned()))?;
 
-        let (_, (instruction, _, (register, extra))) = tuple((
-            alpha1,                 // instruction
-            space1,                 // required space
-            alt((
-                // First case: register with optional offset (jio a, +18)
-                map(tuple((
-                    alpha1,        // register
-                    opt(tuple((    // optional number part
-                        opt(tag(",")),
-                        space0,
-                        alt((tag("+"), tag("-"))),
-                        digit1
-                    )))
-                )), |(reg, num)| (Some(reg), num)),
-                // Second case: just number (jmp +22)
-                map(tuple((
-                    alt((tag("+"), tag("-"))),
-                    digit1
-                )), |(sign, num)| (None, Some((None, "", sign, num))))
-            ))
-        ))(input).map_err(|e: nom::Err<(&str, nom::error::ErrorKind)>| miette::miette!(e.to_owned()))?;
+        // let (_, (instruction, _, (register, extra))) = tuple((
+        //     alpha1,                 // instruction
+        //     space1,                 // required space
+        //     alt((
+        //         // First case: register with optional offset (jio a, +18)
+        //         map(tuple((
+        //             alpha1,        // register
+        //             opt(tuple((    // optional number part
+        //                 opt(tag(",")),
+        //                 space0,
+        //                 alt((tag("+"), tag("-"))),
+        //                 digit1
+        //             )))
+        //         )), |(reg, num)| (Some(reg), num)),
+        //         // Second case: just number (jmp +22)
+        //         map(tuple((
+        //             alt((tag("+"), tag("-"))),
+        //             digit1
+        //         )), |(sign, num)| (None, Some((None, "", sign, num))))
+        //     ))
+        // ))(input).map_err(|e: nom::Err<(&str, nom::error::ErrorKind)>| miette::miette!(e.to_owned()))?;
 
-        dbg!(instruction, register.unwrap(), extra);
+        // dbg!(instruction, register.unwrap(), extra);
 
         // let (input, (instruction, _, register)) = tuple((alpha1, space1, alpha1))(input)
         //     .map_err(|e: nom::Err<(&str, nom::error::ErrorKind)>| miette::miette!(e.to_owned()))?;
@@ -131,19 +182,21 @@ impl FromStr for Instruction {
         //     _ => Err(miette::MietteError::from("invalid input")),
         // }
 
-        match instruction {
-            "jio" => {
-                let (_, _, sign, number) = extra.unwrap();
-                Ok(Self::JumpIfOne(register.unwrap().chars().next().unwrap(), format!("{}{}", sign, number).parse().unwrap()))
-            },
-            "inc" => Ok(Self::Increment(register.unwrap().chars().next().unwrap())),
-            "tpl" => Ok(Self::Triple(register.unwrap().chars().next().unwrap())),
-            "jmp" => {
-                let (_, _, sign, number) = extra.unwrap();
-                Ok(Self::Jump(format!("{}{}", sign, number).parse().unwrap()))
-            },
-            _ => todo!(),
-        }
+        // todo!();
+
+        // match instruction {
+        //     "jio" => {
+        //         let (_, _, sign, number) = extra.unwrap();
+        //         Ok(Self::JumpIfOne(register.unwrap().chars().next().unwrap(), format!("{}{}", sign, number).parse().unwrap()))
+        //     },
+        //     "inc" => Ok(Self::Increment(register.unwrap().chars().next().unwrap())),
+        //     "tpl" => Ok(Self::Triple(register.unwrap().chars().next().unwrap())),
+        //     "jmp" => {
+        //         let (_, _, sign, number) = extra.unwrap();
+        //         Ok(Self::Jump(format!("{}{}", sign, number).parse().unwrap()))
+        //     },
+        //     _ => todo!(),
+        // }
     }
 }
 
@@ -179,6 +232,8 @@ impl Solution for Day {
     type Output = usize;
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+        dbg!(&self);
+
         self.execute();
 
         Ok(self.register_b)
