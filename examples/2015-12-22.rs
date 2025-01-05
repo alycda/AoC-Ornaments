@@ -104,7 +104,7 @@ impl Day {
             not_line_ending                    // Rest of the description
         ))(input)?;
 
-        dbg!(name, cost, description);
+        // dbg!(name, cost, description);
 
         let (_, effects) = Self::parse_effect(description)?;
 
@@ -144,7 +144,7 @@ impl Day {
     }
 
     fn duration_effect(input: &str) -> IResult<&str, Vec<Effect>> {
-        dbg!(input);
+        // dbg!(input);
         let (input, _) = tag("It starts an effect that lasts for ")(input)?;
 
         let (input, turns) = u32(input)?;
@@ -247,7 +247,7 @@ impl Day {
     // More accurately: finds a keyword and then extracts a nearby number
     fn effect_value_parser(keyword: &'static str) -> impl Fn(&str) -> IResult<&str, u32> {
         move |original_input: &str| {
-            dbg!(original_input);
+            // dbg!(original_input);
 
             // First find the keyword
             let (input, _) = take_until(keyword)(original_input)?;
