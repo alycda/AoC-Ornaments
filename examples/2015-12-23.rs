@@ -126,45 +126,28 @@ impl Day {
         while ip < self.instructions.len() {
             let instruction = &self.instructions[ip];
             
-        //     // Helper closures for register access
-        //     let mut get_reg = |reg| match reg {
-        //         'a' => &mut self.register_a,
-        //         'b' => &mut self.register_b,
-        //         _ => panic!("Invalid register"),
-        //     };
-    
             // Default is to move to next instruction
             let mut next_ip = ip + 1;
     
             match instruction {
                 Instruction::Half(reg) => {
-                    // *get_reg(*reg) /= 2;
                     self.set_register(*reg, self.get_register(*reg) / 2);
                 }
                 Instruction::Triple(reg) => {
-                    // *get_reg(*reg) *= 3;
                     self.set_register(*reg, self.get_register(*reg) * 3);
                 }
                 Instruction::Increment(reg) => {
-                    // *get_reg(*reg) += 1;
                     self.set_register(*reg, self.get_register(*reg) + 1);
                 }
                 Instruction::Jump(offset) => {
-                    // next_ip = ip + offset;
                     next_ip = (ip as i32 + offset) as usize;
                 }
                 Instruction::JumpIfEven(reg, offset) => {
-                    // if *get_reg(*reg) % 2 == 0 {
-                    //     next_ip = ip + offset;
-                    // }
                     if self.get_register(*reg) % 2 == 0 {
                         next_ip = ip + *offset as usize;
                     }
                 }
                 Instruction::JumpIfOne(reg, offset) => {
-                    // if *get_reg(*reg) == 1 {
-                    //     next_ip = ip + offset;
-                    // }
                     if self.get_register(*reg) == 1 {
                         next_ip = ip + *offset as usize;
                     }
@@ -180,8 +163,13 @@ impl Solution for Day {
     type Output = i32;
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        dbg!(&self);
+        self.execute();
 
+        Ok(self.register_b)
+    }
+
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+        self.register_a = 1;
         self.execute();
 
         Ok(self.register_b)
@@ -191,10 +179,12 @@ impl Solution for Day {
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("./inputs/2015-12-23.txt"))?;
     let part1 = day.solve(Part::One)?;
-    // let part2 = day.solve(Part::Two)?;
+    // state is dirty after part1, need to reset
+    let mut day = Day::from_str(include_str!("./inputs/2015-12-23.txt"))?;
+    let part2 = day.solve(Part::Two)?;
 
     println!("Part 1: {}", part1);
-    // println!("Part 2: {}", part2);
+    println!("Part 2: {}", part2);
 
     Ok(())
 }
