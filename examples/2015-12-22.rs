@@ -5,6 +5,8 @@ use std::str::FromStr;
 use aoc_ornaments::{Part, Solution};
 use nom::{branch::alt, bytes::complete::{tag, take_until}, character::complete::{not_line_ending, space0, u32}, combinator::{map, opt, recognize}, multi::separated_list1, sequence::{terminated, tuple}, IResult};
 use rand::seq::SliceRandom;
+use std::collections::{BinaryHeap, HashSet};
+use std::cmp::Ordering;
 
 #[derive(Debug, Clone, Copy)]
 struct Player {
@@ -236,279 +238,156 @@ Recharge costs 229 mana. It starts an effect that lasts for 5 turns. At the star
     }
 }
 
+#[derive(Clone, Eq, Hash)]
 struct GameState {
-    player: Player,
-    boss: Boss,
-    mana_spent: u32,
-    effects: Vec<(Effect, usize)>,
+    player_hp: i32,
+    player_mana: i32,
+    boss_hp: i32,
+    mana_spent: i32,
+    shield_timer: i32,
+    poison_timer: i32,
+    recharge_timer: i32,
+}
+
+impl PartialEq for GameState {
+    fn eq(&self, other: &Self) -> bool {
+        self.mana_spent == other.mana_spent
+    }
+}
+
+impl Ord for GameState {
+    fn cmp(&self, other: &Self) -> Ordering {
+        other.mana_spent.cmp(&self.mana_spent)
+    }
+}
+
+impl PartialOrd for GameState {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 impl GameState {
-    fn new(player: Player, boss: Boss) -> Self {
+    fn new(player_hp: i32, player_mana: i32, boss_hp: i32) -> Self {
         Self {
-            player,
-            boss,
+            player_hp,
+            player_mana,
+            boss_hp,
             mana_spent: 0,
-            effects: vec![],
+            shield_timer: 0,
+            poison_timer: 0,
+            recharge_timer: 0,
         }
-    }
-
-    fn has_armor(&self) -> bool {
-        self.effects.iter().any(|(effect, _)| matches!(effect, Effect::Armor(..)))
-    }
-
-    fn has_poison(&self) -> bool {
-        self.effects.iter().any(|(effect, _)| matches!(effect, Effect::Damage(..)))
-    }
-
-    fn cast_spell(&mut self, spell: &Spell) -> Option<()> {
-        if spell.cost > self.player.mana {
-            return None;
-        }
-
-        self.player.mana -= spell.cost;
-        self.mana_spent += spell.cost;
-
-        if let Some(effect) = &spell.effect {
-            self.effects.push((effect.clone(), effect_duration(effect)));
-        }
-
-        if spell.damage > 0 {
-            self.boss.hp = self.boss.hp.saturating_sub(spell.damage);
-        }
-
-        Some(())
     }
 
     fn apply_effects(&mut self) {
-        let mut new_effects = Vec::new();
-        
-        for (effect, turns) in &self.effects {
-            if *turns > 0 {
-                match effect {
-                    Effect::Armor(_, _) => (), // Handled in boss turn
-                    Effect::Damage(_, amount) => self.boss.hp = self.boss.hp.saturating_sub(*amount),
-                    Effect::Mana(_, amount) => self.player.mana += amount,
-                    Effect::Heal(amount) => self.player.hp += *amount,
-                }
-                if *turns > 1 {
-                    new_effects.push((effect.clone(), turns - 1));
-                }
-            }
+        if self.shield_timer > 0 { self.shield_timer -= 1; }
+        if self.poison_timer > 0 { 
+            self.boss_hp -= 3;
+            self.poison_timer -= 1; 
         }
-        
-        self.effects = new_effects;
+        if self.recharge_timer > 0 { 
+            self.player_mana += 101;
+            self.recharge_timer -= 1;
+        }
+    }
+
+    fn cast_spell(&mut self, spell: &Spell) -> bool {
+        if self.player_mana < spell.cost as i32 { return false; }
+
+        self.player_mana -= spell.cost as i32;
+        self.mana_spent += spell.cost as i32;
+
+        match spell.name.as_str() {
+            "Magic Missile" => self.boss_hp -= 4,
+            "Drain" => {
+                self.boss_hp -= 2;
+                self.player_hp += 2;
+            },
+            "Shield" => {
+                if self.shield_timer > 0 { return false; }
+                self.shield_timer = 6;
+            },
+            "Poison" => {
+                if self.poison_timer > 0 { return false; }
+                self.poison_timer = 6;
+            },
+            "Recharge" => {
+                if self.recharge_timer > 0 { return false; }
+                self.recharge_timer = 5;
+            },
+            _ => unreachable!()
+        }
+        true
     }
 
     fn process_boss_turn(&mut self) -> bool {
-        let damage = self.boss.damage;
-        let armor = self.effects.iter()
-            .filter_map(|(effect, turns)| {
-                match effect {
-                    Effect::Armor(_, value) if *turns > 0 => Some(value),
-                    _ => None,
-                }
-            })
-            .sum::<u32>();
-
-        let damage = if armor >= damage {
-            1
-        } else {
-            damage - armor
-        };
-
-        self.player.hp = self.player.hp.saturating_sub(damage);
+        let armor = if self.shield_timer > 0 { 7 } else { 0 };
+        self.player_hp -= std::cmp::max(1, 10 - armor);
 
         true
     }
 
     fn is_game_over(&self) -> bool {
-        self.player.hp == 0 || self.boss.hp == 0
+        self.player_hp <= 0 || self.boss_hp <= 0
     }
 
-    fn get_valid_spells<'a>(&self, spells: &'a [Spell]) -> Vec<&'a Spell> {
-        spells.iter()
-            .filter(|spell| {
-                // Check if we have enough mana
-                if spell.cost > self.player.mana {
-                    return false;
-                }
-
-                // Check if the spell's effect is already active
-                if let Some(new_effect) = &spell.effect {
-                    for (active_effect, turns) in &self.effects {
-                        if *turns > 0 {
-                            match (new_effect, active_effect) {
-                                // Can't cast if same type of effect is active
-                                (Effect::Armor(..), Effect::Armor(..)) |
-                                (Effect::Damage(..), Effect::Damage(..)) |
-                                (Effect::Mana(..), Effect::Mana(..)) => return false,
-                                _ => continue,
-                            }
-                        }
-                    }
-                }
-                true
-            })
-            .collect()
+    fn has_armor(&self) -> bool {
+        self.shield_timer > 0
     }
+
+    fn has_poison(&self) -> bool {
+        self.poison_timer > 0
+    }
+
+    // fn get_valid_spells(&self, spells: &[Spell]) -> Vec<&Spell> {
+    //     spells.iter().filter(|s| {
+    //         s.cost <= self.player_mana as u32 && match s.effect {
+    //             Some(Effect::Armor(..)) => !self.has_armor(),
+    //             Some(Effect::Damage(..)) => !self.has_poison(),
+    //             Some(Effect::Mana(..)) => self.recharge_timer == 0,
+    //             None => true,
+    //             _ => false,
+    //         }
+    //     }).collect()
+    // }
 }
 
 impl Day {
-    fn simulate_random_battle(&self, rng: &mut impl rand::Rng) -> Option<u32> {
-        let mut state = GameState::new(self.0.clone(), self.2.clone());
-        
-        while !state.is_game_over() {
-            // Apply effects at start of turn
-            state.apply_effects();
-            if state.boss.hp == 0 {
-                return Some(state.mana_spent);
-            }
-            
-            let valid_spells = state.get_valid_spells(&self.1);
-            if valid_spells.is_empty() {
-                return None;
-            }
-            
-            // Improved strategy weights
-            let spell = if state.player.mana < 300 && !state.effects.iter().any(|(e, _)| matches!(e, Effect::Mana(..))) {
-                valid_spells.iter().find(|s| s.name == "Recharge")
-            } else if state.player.hp < 20 && !state.has_armor() {
-                valid_spells.iter().find(|s| s.name == "Shield")
-            } else if !state.effects.iter().any(|(e, _)| matches!(e, Effect::Damage(..))) {
-                valid_spells.iter().find(|s| s.name == "Poison")
-            } else {
-                // Prefer lower cost spells when possible
-                let weighted_spells: Vec<_> = valid_spells.iter()
-                    .filter(|s| s.cost <= state.player.mana)
-                    .collect();
-                weighted_spells.get(rng.gen_range(0..weighted_spells.len())).map(|v| &**v)
-            };
-            
-            if let Some(spell) = spell {
-                if state.cast_spell(spell).is_none() {
-                    return None;
-                }
-            } else {
-                continue;
-            }
-            
-            // Process boss turn
-            state.apply_effects();
-            if state.boss.hp == 0 {
-                return Some(state.mana_spent);
-            }
-            
-            if !state.process_boss_turn() || state.player.hp == 0 {
-                return None;
-            }
-        }
-        
-        if state.boss.hp == 0 {
-            Some(state.mana_spent)
-        } else {
-            None
-        }
-    }
-
-    fn find_least_mana_monte_carlo(&self) -> Option<u32> {
-        let mut rng = rand::thread_rng();
-        let mut min_mana: Option<u32> = None;
-        
-        for _ in 0..500_000 {
-            if let Some(mana) = self.simulate_random_battle(&mut rng) {
-                min_mana = Some(min_mana.map_or(mana, |m| m.min(mana)));
-            }
-        }
-        
-        min_mana
-    }
-}
-
-impl Day {
-
-    fn simulate_battle(&self, rng: &mut impl rand::Rng) -> Option<u32> {
-        let mut state = GameState::new(self.0.clone(), self.2.clone());
-        
-        while !state.is_game_over() {
-            state.apply_effects();
-            if state.boss.hp == 0 {
-                return Some(state.mana_spent);
-            }
-            
-            let valid_spells = state.get_valid_spells(&self.1);
-            if valid_spells.is_empty() || state.player.mana < 53 {
-                return None;
-            }
-    
-            // More robust spell selection
-            let spell = if !state.has_armor() && rng.gen_bool(0.66) {
-                valid_spells.iter().find(|s| s.name == "Shield")
-                    .or_else(|| valid_spells.first()) // Fallback if Shield isn't available
-            } else if state.player.mana < 400 && state.boss.hp > 10 && rng.gen_bool(0.66) {
-                valid_spells.iter().find(|s| s.name == "Recharge")
-                    .or_else(|| valid_spells.first())
-            } else if !state.has_poison() && rng.gen_bool(0.66) {
-                valid_spells.iter().find(|s| s.name == "Poison")
-                    .or_else(|| valid_spells.first())
-            } else {
-                let idx = rng.gen_range(0..valid_spells.len());
-                Some(&valid_spells[idx])
-            }.unwrap(); // This unwrap is now safe because we always have a fallback
-    
-            if state.cast_spell(spell).is_none() {
-                return None;
-            }
-    
-            state.apply_effects();
-            if state.boss.hp == 0 {
-                return Some(state.mana_spent);
-            }
-            
-            if !state.process_boss_turn() {
-                return None;
-            }
-        }
-        
-        if state.boss.hp == 0 {
-            Some(state.mana_spent)
-        } else {
-            None
-        }
-    }
 
     // fn simulate_battle(&self, rng: &mut impl rand::Rng) -> Option<u32> {
     //     let mut state = GameState::new(self.0.clone(), self.2.clone());
         
     //     while !state.is_game_over() {
-    //         // Apply effects at start of turn
     //         state.apply_effects();
     //         if state.boss.hp == 0 {
     //             return Some(state.mana_spent);
     //         }
             
     //         let valid_spells = state.get_valid_spells(&self.1);
-    //         if valid_spells.is_empty() || state.player.mana < 53 { // 53 is cheapest spell
+    //         if valid_spells.is_empty() || state.player.mana < 53 {
     //             return None;
     //         }
-
-    //         // Select spell using weighted probabilities like Ruby version
+    
+    //         // More robust spell selection
     //         let spell = if !state.has_armor() && rng.gen_bool(0.66) {
     //             valid_spells.iter().find(|s| s.name == "Shield")
+    //                 .or_else(|| valid_spells.first()) // Fallback if Shield isn't available
     //         } else if state.player.mana < 400 && state.boss.hp > 10 && rng.gen_bool(0.66) {
     //             valid_spells.iter().find(|s| s.name == "Recharge")
+    //                 .or_else(|| valid_spells.first())
     //         } else if !state.has_poison() && rng.gen_bool(0.66) {
     //             valid_spells.iter().find(|s| s.name == "Poison")
+    //                 .or_else(|| valid_spells.first())
     //         } else {
-    //             // Pick random affordable spell
-    //             Some(valid_spells.choose(rng).unwrap())
-    //         }.unwrap();
-            
+    //             let idx = rng.gen_range(0..valid_spells.len());
+    //             Some(&valid_spells[idx])
+    //         }.unwrap(); // This unwrap is now safe because we always have a fallback
+    
     //         if state.cast_spell(spell).is_none() {
     //             return None;
     //         }
-
-    //         // Process boss turn
+    
     //         state.apply_effects();
     //         if state.boss.hp == 0 {
     //             return Some(state.mana_spent);
@@ -526,34 +405,54 @@ impl Day {
     //     }
     // }
 
-    fn find_least_mana(&self) -> Option<u32> {
-        use rand::thread_rng;
-        let mut rng = thread_rng();
-        let mut min_mana: Option<u32> = None;
+    fn find_least_mana(&self) -> Option<i32> {
+        let mut heap = BinaryHeap::new();
+        let mut seen = HashSet::new();
+        
+        let initial = GameState::new(50, 500, self.2.hp as i32);
+        heap.push(initial.clone());
+        seen.insert(initial);
 
-        // Run multiple batches like Ruby version
-        for _ in 0..20 {
-            let mut wins = Vec::new();
-            
-            // Try many battles per batch
-            for _ in 0..100_000 {
-                if let Some(mana) = self.simulate_battle(&mut rng) {
-                    wins.push(mana);
-                }
+        while let Some(mut state) = heap.pop() {
+            // Boss is dead?
+            if state.boss_hp <= 0 {
+                return Some(state.mana_spent);
             }
 
-            // Update minimum if we found any wins
-            if let Some(&batch_min) = wins.iter().min() {
-                min_mana = Some(min_mana.map_or(batch_min, |m| m.min(batch_min)));
+            // Player's turn
+            state.apply_effects();
+            if state.boss_hp <= 0 {
+                return Some(state.mana_spent);
+            }
+
+            // Try each spell
+            for spell in &self.1 {
+                let mut new_state = state.clone();
+                if !new_state.cast_spell(spell) { continue; }
+
+                // Boss turn
+                new_state.apply_effects();
+                if new_state.boss_hp <= 0 {
+                    return Some(new_state.mana_spent);
+                }
+
+                // Boss attacks
+                let armor = if new_state.shield_timer > 0 { 7 } else { 0 };
+                new_state.player_hp -= std::cmp::max(1, self.2.damage as i32 - armor);
+
+                if new_state.player_hp > 0 && !seen.contains(&new_state) {
+                    seen.insert(new_state.clone());
+                    heap.push(new_state);
+                }
             }
         }
 
-        min_mana
+        None
     }
 }
 
 impl Solution for Day {
-    type Output = u32;
+    type Output = i32;
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
         self.init_spells()?;
