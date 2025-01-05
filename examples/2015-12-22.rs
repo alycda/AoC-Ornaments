@@ -5,13 +5,13 @@ use std::str::FromStr;
 use aoc_ornaments::{Part, Solution};
 use nom::{branch::alt, bytes::complete::{tag, take_until}, character::complete::{not_line_ending, space0, u32}, combinator::{map, opt, recognize}, multi::separated_list1, sequence::{terminated, tuple}, IResult};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 struct Player {
     hp: u32,
     mana: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 struct Boss {
     hp: u32,
     damage: u32,
@@ -42,7 +42,7 @@ impl Spell {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 enum Effect {
     /// duration, effect
     Armor(usize, u32),
@@ -181,69 +181,6 @@ impl Day {
         Ok((input, effect))
     }
 
-    // fn number_before_keyword(keyword: &'static str) -> impl Fn(&str) -> IResult<&str, u32> {
-    //     move |input: &str| {
-    //         let (input, _) = Self::take_until_matching(input, |c| c.is_ascii_digit())?;
-    //         let (input, number) = u32(input)?;
-    //         let (input, _) = take_until(keyword)(input)?;
-    //         Ok((input, number))
-    //     }
-    // }
-    
-    // fn number_after_keyword(keyword: &'static str) -> impl Fn(&str) -> IResult<&str, u32> {
-    //     move |input: &str| {
-    //         let (input, _) = tag(keyword)(input)?;
-    //         let (input, _) = Self::take_until_matching(input, |c| c.is_ascii_digit())?;
-    //         let (input, number) = u32(input)?;
-    //         Ok((input, number))
-    //     }
-    // }
-    
-    // fn effect_value_parser(keyword: &'static str) -> impl Fn(&str) -> IResult<&str, u32> {
-    //     move |input: &str| {
-    //         alt((
-    //             Self::number_before_keyword(keyword),
-    //             Self::number_after_keyword(keyword)
-    //         ))(input)
-    //     }
-    // }
-
-    // fn effect_value_parser(keyword: &'static str) -> impl Fn(&str) -> IResult<&str, u32> {
-    //     move |input: &str| {
-    //         let (input, _) = take_until(keyword)(input)?;
-            
-    //         // Try parsing a number that appears before the keyword first
-    //         let before_keyword = recognize(tuple((
-    //             Self::take_until_matching(|c| c.is_ascii_digit()),
-    //             u32,
-    //             take_until(keyword)
-    //         )));
-    
-    //         // If that fails, look for the number after the keyword
-    //         let after_keyword = recognize(tuple((
-    //             tag(keyword),
-    //             Self::take_until_matching(|c| c.is_ascii_digit()),
-    //             u32
-    //         )));
-    
-    //         // Try both patterns
-    //         let (input, number_str) = alt((
-    //             before_keyword,
-    //             after_keyword
-    //         ))(input)?;
-    
-    //         // Extract the actual number from the matched text
-    //         let number = number_str
-    //             .chars()
-    //             .filter(|c| c.is_ascii_digit())
-    //             .collect::<String>()
-    //             .parse()
-    //             .unwrap();
-    
-    //         Ok((input, number))
-    //     }
-    // }
-
     // More accurately: finds a keyword and then extracts a nearby number
     fn effect_value_parser(keyword: &'static str) -> impl Fn(&str) -> IResult<&str, u32> {
         move |original_input: &str| {
@@ -300,14 +237,204 @@ Recharge costs 229 mana. It starts an effect that lasts for 5 turns. At the star
     }
 }
 
+struct GameState {
+    player: Player,
+    boss: Boss,
+    mana_spent: u32,
+    effects: Vec<(Effect, usize)>,
+}
+
+impl GameState {
+    fn new(player: Player, boss: Boss) -> Self {
+        Self {
+            player,
+            boss,
+            mana_spent: 0,
+            effects: vec![],
+        }
+    }
+
+    fn has_armor(&self) -> bool {
+        self.effects.iter().any(|(effect, _)| matches!(effect, Effect::Armor(..)))
+    }
+
+    fn has_poison(&self) -> bool {
+        self.effects.iter().any(|(effect, _)| matches!(effect, Effect::Damage(..)))
+    }
+
+    fn cast_spell(&mut self, spell: &Spell) -> Option<()> {
+        if spell.cost > self.player.mana {
+            return None;
+        }
+
+        self.player.mana -= spell.cost;
+        self.mana_spent += spell.cost;
+
+        if let Some(effect) = &spell.effect {
+            self.effects.push((effect.clone(), effect_duration(effect)));
+        }
+
+        if spell.damage > 0 {
+            self.boss.hp = self.boss.hp.saturating_sub(spell.damage);
+        }
+
+        Some(())
+    }
+
+    fn apply_effects(&mut self) {
+        let mut new_effects = Vec::new();
+        
+        for (effect, turns) in &self.effects {
+            if *turns > 0 {
+                match effect {
+                    Effect::Armor(_, _) => (), // Handled in boss turn
+                    Effect::Damage(_, amount) => self.boss.hp = self.boss.hp.saturating_sub(*amount),
+                    Effect::Mana(_, amount) => self.player.mana += amount,
+                    Effect::Heal(amount) => self.player.hp += amount,
+                }
+                if *turns > 1 {
+                    new_effects.push((effect.clone(), turns - 1));
+                }
+            }
+        }
+        
+        self.effects = new_effects;
+    }
+
+    fn process_boss_turn(&mut self) -> bool {
+        let damage = self.boss.damage;
+        let armor = self.effects.iter()
+            .filter_map(|(effect, turns)| {
+                match effect {
+                    Effect::Armor(_, value) if *turns > 0 => Some(value),
+                    _ => None,
+                }
+            })
+            .sum::<u32>();
+
+        let damage = if armor >= damage {
+            1
+        } else {
+            damage - armor
+        };
+
+        self.player.hp = self.player.hp.saturating_sub(damage);
+
+        true
+    }
+
+    fn is_game_over(&self) -> bool {
+        self.player.hp == 0 || self.boss.hp == 0
+    }
+
+    fn get_valid_spells<'a>(&self, spells: &'a [Spell]) -> Vec<&'a Spell> {
+        spells.iter()
+            .filter(|spell| {
+                // Check if we have enough mana
+                if spell.cost > self.player.mana {
+                    return false;
+                }
+
+                // Check if the spell's effect is already active
+                if let Some(new_effect) = &spell.effect {
+                    for (active_effect, turns) in &self.effects {
+                        if *turns > 0 {
+                            match (new_effect, active_effect) {
+                                // Can't cast if same type of effect is active
+                                (Effect::Armor(..), Effect::Armor(..)) |
+                                (Effect::Damage(..), Effect::Damage(..)) |
+                                (Effect::Mana(..), Effect::Mana(..)) => return false,
+                                _ => continue,
+                            }
+                        }
+                    }
+                }
+                true
+            })
+            .collect()
+    }
+}
+
+impl Day {
+    fn simulate_random_battle(&self, rng: &mut impl rand::Rng) -> Option<u32> {
+        let mut state = GameState::new(self.0.clone(), self.2.clone());
+        
+        while !state.is_game_over() {
+            // Apply effects at start of turn
+            state.apply_effects();
+            if state.is_game_over() {
+                break;
+            }
+            
+            // Choose spell with some strategy
+            let valid_spells = state.get_valid_spells(&self.1);
+            if valid_spells.is_empty() {
+                return None;
+            }
+            
+            // Apply heuristics similar to Ruby version
+            let spell = if !state.has_armor() && rng.gen_bool(0.6) {
+                valid_spells.iter().find(|s| s.name == "Shield")
+            } else if state.player.mana < 400 && state.boss.hp > 10 && rng.gen_bool(0.6) {
+                valid_spells.iter().find(|s| s.name == "Recharge")
+            } else if !state.has_poison() && rng.gen_bool(0.6) {
+                valid_spells.iter().find(|s| s.name == "Poison")
+            } else {
+                Some(&valid_spells[rng.gen_range(0..valid_spells.len())])
+            };
+            
+            if let Some(spell) = spell {
+                if state.cast_spell(spell).is_none() {
+                    return None;
+                }
+            } else {
+                continue;
+            }
+            
+            // Process boss turn
+            if !state.process_boss_turn() {
+                return None;
+            }
+        }
+        
+        if state.boss.hp <= 0 {
+            Some(state.mana_spent)
+        } else {
+            None
+        }
+    }
+    
+    fn find_least_mana_monte_carlo(&self) -> Option<u32> {
+        let mut rng = rand::thread_rng();
+        let mut min_mana: Option<u32> = None;
+        
+        for _ in 0..100_000 {
+            if let Some(mana) = self.simulate_random_battle(&mut rng) {
+                min_mana = Some(min_mana.map_or(mana, |m| m.min(mana)));
+            }
+        }
+        
+        min_mana
+    }
+}
+
 impl Solution for Day {
-    type Output = usize;
+    type Output = u32;
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
         self.init_spells()?;
         dbg!(&self);
 
-        todo!()
+        Self::find_least_mana_monte_carlo(&self).ok_or_else(|| miette::miette!("No solution found"))
+    }
+}
+
+fn effect_duration(effect: &Effect) -> usize {
+    match effect {
+        Effect::Armor(duration, _) => *duration,
+        Effect::Damage(duration, _) => *duration,
+        Effect::Mana(duration, _) => *duration,
+        Effect::Heal(_) => 0,  // Instant effect
     }
 }
 
