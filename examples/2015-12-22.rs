@@ -3,7 +3,7 @@
 use std::str::FromStr;
 
 use aoc_ornaments::{Part, Solution};
-use nom::{branch::alt, bytes::complete::{tag, take_until}, character::complete::{not_line_ending, space0, u32}, combinator::{map, opt}, multi::separated_list1, sequence::{terminated, tuple}, IResult};
+use nom::{branch::alt, bytes::complete::{tag, take_until}, character::complete::{not_line_ending, space0, u32}, combinator::{map, opt, recognize}, multi::separated_list1, sequence::{terminated, tuple}, IResult};
 
 #[derive(Debug)]
 struct Player {
@@ -53,13 +53,6 @@ enum Effect {
     Heal(u32),
 }
 
-// #[derive(Debug)]
-// struct Effect {
-//     armor: Option<()>,
-//     damage: Option<()>,
-//     mana: Option<()>,
-// }
-
 #[derive(Debug)]
 struct Day(Player, Vec<Spell>, Boss);
 
@@ -78,33 +71,13 @@ impl FromStr for Day {
 
 impl Day {
     fn parse_boss_stats(input: &str) -> IResult<&str, Boss> {
-        // let (input, (_, _, _, hp)) = tuple((
-        //     // Parse the key (e.g. "Hit Points")
-        //     terminated(take_until(":"), space0),
-        //     tag(":"),
-        //     space0,
-        //     // Parse the number
-        //     u32,
-        // ))(input)?;
-
         let (input, (_, hp)) = Self::parse_stat_line(input)?;
         let (_, (_, damage)) = Self::parse_stat_line(input)?;
 
-        // dbg!(hp, damage);
-
-        // Ok((input, Boss::new(hp, damage)))
         Ok((input, Boss { hp, damage }))
     }
 
     fn parse_stat_line(input: &str) -> IResult<&str, (String, u32)> {
-        // let (input, (key, _, value)) = tuple((
-        //     take_until(":"),
-        //     tag(":"),
-        //     u32,
-        // ))(input)?;
-
-        // Ok((input, (key.to_string(), value)))
-
         let (input, (key, _, _, value)) = tuple((
             // Parse the key (e.g. "Hit Points")
             terminated(take_until(":"), space0),
@@ -131,45 +104,21 @@ impl Day {
             not_line_ending                    // Rest of the description
         ))(input)?;
 
-        // dbg!(name, cost, description);
+        dbg!(name, cost, description);
 
         let (_, effects) = Self::parse_effect(description)?;
-        // dbg!(&effects);
-        // dbg!(&effects[0]);
-        // dbg!(&effects[1]);
-        
-        // let damage = match &effects[0] {
-        //     Effect::Damage(_, damage) => *damage,
-        //     _ => panic!("Expected damage effect"),
-        // };
 
         for eff in effects {
             match eff {
                 Effect::Damage(_, d) => damage = d,
                 any => effect = Some(any),
-                // Effect::Heal(d) => effect = Some(Effect)
-                // _ => unimplemented!("this parser only handles instant damage and healing")
             }
         }
-
-        // let (input, b) = tuple((not_line_ending, tag(" costs "), not_line_ending))(input)?;
-        // dbg!(b);
-
-        // // let (input, (_, cost, _, damage)) = tuple((
-        // //     // Parse the key (e.g. "Hit Points")
-        // //     terminated(take_until(" "), space0),
-        // //     u32,
-        // //     tag("mana."),
-        // //     u32,
-        // // ))(input)?;
-
-        // // Ok((input, Attack { cost: cost as usize, damage: damage as usize, effect: None }))
 
         Ok((input, Spell { name: name.to_string(), cost, damage, effect }))
     }
 
     fn parse_effect(input: &str) -> IResult<&str, Vec<Effect>> {
-        dbg!(input);
         alt((Self::instant_damage, Self::duration_effect))(input)
     }
 
@@ -185,8 +134,6 @@ impl Day {
             tag(" hit points")
         )))(input)?;
 
-        // dbg!(damage, heal);
-
         let mut effects = vec![Effect::Damage(0, damage)];
 
         if let Some((_, heal, _)) = heal {
@@ -197,12 +144,12 @@ impl Day {
     }
 
     fn duration_effect(input: &str) -> IResult<&str, Vec<Effect>> {
+        dbg!(input);
         let (input, _) = tag("It starts an effect that lasts for ")(input)?;
 
         let (input, turns) = u32(input)?;
         let (input, _) = tag(" turns")(input)?;
 
-        // dbg!(turns);
         let (input, effect) = Self::flexible_duration_effect_parser(input, turns as usize)?;
         // dbg!(&effect);
 
@@ -233,6 +180,69 @@ impl Day {
         let (input, _) = not_line_ending(remaining)?;
         Ok((input, effect))
     }
+
+    // fn number_before_keyword(keyword: &'static str) -> impl Fn(&str) -> IResult<&str, u32> {
+    //     move |input: &str| {
+    //         let (input, _) = Self::take_until_matching(input, |c| c.is_ascii_digit())?;
+    //         let (input, number) = u32(input)?;
+    //         let (input, _) = take_until(keyword)(input)?;
+    //         Ok((input, number))
+    //     }
+    // }
+    
+    // fn number_after_keyword(keyword: &'static str) -> impl Fn(&str) -> IResult<&str, u32> {
+    //     move |input: &str| {
+    //         let (input, _) = tag(keyword)(input)?;
+    //         let (input, _) = Self::take_until_matching(input, |c| c.is_ascii_digit())?;
+    //         let (input, number) = u32(input)?;
+    //         Ok((input, number))
+    //     }
+    // }
+    
+    // fn effect_value_parser(keyword: &'static str) -> impl Fn(&str) -> IResult<&str, u32> {
+    //     move |input: &str| {
+    //         alt((
+    //             Self::number_before_keyword(keyword),
+    //             Self::number_after_keyword(keyword)
+    //         ))(input)
+    //     }
+    // }
+
+    // fn effect_value_parser(keyword: &'static str) -> impl Fn(&str) -> IResult<&str, u32> {
+    //     move |input: &str| {
+    //         let (input, _) = take_until(keyword)(input)?;
+            
+    //         // Try parsing a number that appears before the keyword first
+    //         let before_keyword = recognize(tuple((
+    //             Self::take_until_matching(|c| c.is_ascii_digit()),
+    //             u32,
+    //             take_until(keyword)
+    //         )));
+    
+    //         // If that fails, look for the number after the keyword
+    //         let after_keyword = recognize(tuple((
+    //             tag(keyword),
+    //             Self::take_until_matching(|c| c.is_ascii_digit()),
+    //             u32
+    //         )));
+    
+    //         // Try both patterns
+    //         let (input, number_str) = alt((
+    //             before_keyword,
+    //             after_keyword
+    //         ))(input)?;
+    
+    //         // Extract the actual number from the matched text
+    //         let number = number_str
+    //             .chars()
+    //             .filter(|c| c.is_ascii_digit())
+    //             .collect::<String>()
+    //             .parse()
+    //             .unwrap();
+    
+    //         Ok((input, number))
+    //     }
+    // }
 
     // More accurately: finds a keyword and then extracts a nearby number
     fn effect_value_parser(keyword: &'static str) -> impl Fn(&str) -> IResult<&str, u32> {
@@ -265,23 +275,6 @@ impl Day {
 
     fn parse_spells(input: &str) -> IResult<&str, Vec<Spell>> {
         let (input, spells) = separated_list1(tag("\n"), Self::parse_spell)(input)?;
-
-        // let (input, name) = take_until(" costs")(input)?;
-        // dbg!(&name);
-        // let (input, _) = tag(" costs ")(input)?;
-        // // let (input, cost) = map_res(digit1, str::parse)(input)?;
-        // let (input, cost) = u32(input)?;
-        // dbg!(&cost);
-        // let (input, _) = tag(" mana. ")(input)?;
-        // let (input, description) = rest(input)?;
-        // dbg!(&description);
-
-        // let (input, spells) = separated_list1(tag("\n"), Self::parse_spell)(input)?;
-
-        // // let (input, spells) = Self::parse_spell(input)?;
-        // dbg!(&spells);
-
-        // todo!();
 
         Ok((input, spells))
     }
