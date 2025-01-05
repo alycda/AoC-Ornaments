@@ -2,7 +2,9 @@ use std::str::FromStr;
 
 pub mod bits;
 pub mod linear;
+pub mod intcode;
 pub mod nom;
+pub mod scoring;
 pub mod spatial;
 
 /// Shared behavior amongst AOC/Everybody.codes solutions
