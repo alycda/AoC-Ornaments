@@ -3,8 +3,7 @@
 use std::str::FromStr;
 
 use aoc_ornaments::{Part, Solution};
-use nom::{branch::alt, bytes::complete::{tag, take_until}, character::complete::{not_line_ending, space0, u32}, combinator::{map, opt, recognize}, multi::separated_list1, sequence::{terminated, tuple}, IResult};
-use rand::seq::SliceRandom;
+use nom::{branch::alt, bytes::complete::{tag, take_until}, character::complete::{not_line_ending, space0, u32}, combinator::{map, opt}, multi::separated_list1, sequence::{terminated, tuple}, IResult};
 use std::collections::{BinaryHeap, HashSet};
 use std::cmp::Ordering;
 
@@ -320,92 +319,15 @@ impl GameState {
         }
         true
     }
+}
 
-    fn process_boss_turn(&mut self) -> bool {
-        let armor = if self.shield_timer > 0 { 7 } else { 0 };
-        self.player_hp -= std::cmp::max(1, 10 - armor);
-
-        true
-    }
-
-    fn is_game_over(&self) -> bool {
-        self.player_hp <= 0 || self.boss_hp <= 0
-    }
-
-    fn has_armor(&self) -> bool {
-        self.shield_timer > 0
-    }
-
-    fn has_poison(&self) -> bool {
-        self.poison_timer > 0
-    }
-
-    // fn get_valid_spells(&self, spells: &[Spell]) -> Vec<&Spell> {
-    //     spells.iter().filter(|s| {
-    //         s.cost <= self.player_mana as u32 && match s.effect {
-    //             Some(Effect::Armor(..)) => !self.has_armor(),
-    //             Some(Effect::Damage(..)) => !self.has_poison(),
-    //             Some(Effect::Mana(..)) => self.recharge_timer == 0,
-    //             None => true,
-    //             _ => false,
-    //         }
-    //     }).collect()
-    // }
+enum GameMode {
+    Normal,
+    Hard,
 }
 
 impl Day {
-
-    // fn simulate_battle(&self, rng: &mut impl rand::Rng) -> Option<u32> {
-    //     let mut state = GameState::new(self.0.clone(), self.2.clone());
-        
-    //     while !state.is_game_over() {
-    //         state.apply_effects();
-    //         if state.boss.hp == 0 {
-    //             return Some(state.mana_spent);
-    //         }
-            
-    //         let valid_spells = state.get_valid_spells(&self.1);
-    //         if valid_spells.is_empty() || state.player.mana < 53 {
-    //             return None;
-    //         }
-    
-    //         // More robust spell selection
-    //         let spell = if !state.has_armor() && rng.gen_bool(0.66) {
-    //             valid_spells.iter().find(|s| s.name == "Shield")
-    //                 .or_else(|| valid_spells.first()) // Fallback if Shield isn't available
-    //         } else if state.player.mana < 400 && state.boss.hp > 10 && rng.gen_bool(0.66) {
-    //             valid_spells.iter().find(|s| s.name == "Recharge")
-    //                 .or_else(|| valid_spells.first())
-    //         } else if !state.has_poison() && rng.gen_bool(0.66) {
-    //             valid_spells.iter().find(|s| s.name == "Poison")
-    //                 .or_else(|| valid_spells.first())
-    //         } else {
-    //             let idx = rng.gen_range(0..valid_spells.len());
-    //             Some(&valid_spells[idx])
-    //         }.unwrap(); // This unwrap is now safe because we always have a fallback
-    
-    //         if state.cast_spell(spell).is_none() {
-    //             return None;
-    //         }
-    
-    //         state.apply_effects();
-    //         if state.boss.hp == 0 {
-    //             return Some(state.mana_spent);
-    //         }
-            
-    //         if !state.process_boss_turn() {
-    //             return None;
-    //         }
-    //     }
-        
-    //     if state.boss.hp == 0 {
-    //         Some(state.mana_spent)
-    //     } else {
-    //         None
-    //     }
-    // }
-
-    fn find_least_mana(&self) -> Option<i32> {
+    fn find_least_mana(&self, mode: GameMode) -> Option<i32> {
         let mut heap = BinaryHeap::new();
         let mut seen = HashSet::new();
         
@@ -414,6 +336,11 @@ impl Day {
         seen.insert(initial);
 
         while let Some(mut state) = heap.pop() {
+            if let GameMode::Hard = mode {
+                state.player_hp -= 1;
+                if state.player_hp <= 0 { continue; }
+            }
+
             // Boss is dead?
             if state.boss_hp <= 0 {
                 return Some(state.mana_spent);
@@ -456,29 +383,26 @@ impl Solution for Day {
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
         self.init_spells()?;
-        dbg!(&self);
+        // dbg!(&self);
 
-        // Self::find_least_mana_monte_carlo(&self).ok_or_else(|| miette::miette!("No solution found"))
-        Self::find_least_mana(&self).ok_or_else(|| miette::miette!("No solution found"))
+        Self::find_least_mana(&self, GameMode::Normal).ok_or_else(|| miette::miette!("No solution found"))
     }
-}
 
-fn effect_duration(effect: &Effect) -> usize {
-    match effect {
-        Effect::Armor(duration, _) => *duration,
-        Effect::Damage(duration, _) => *duration,
-        Effect::Mana(duration, _) => *duration,
-        Effect::Heal(_) => 0,  // Instant effect
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+        self.init_spells()?;
+        // dbg!(&self);
+
+        Self::find_least_mana(&self, GameMode::Hard).ok_or_else(|| miette::miette!("No solution found"))
     }
 }
 
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("./inputs/2015-12-22.txt"))?;
     let part1 = day.solve(Part::One)?;
-    // let part2 = day.solve(Part::Two)?;
+    let part2 = day.solve(Part::Two)?;
 
-    println!("Part 1: {}", part1); // < 1309
-    // println!("Part 2: {}", part2);
+    println!("Part 1: {}", part1);
+    println!("Part 2: {}", part2);
 
     Ok(())
 }
