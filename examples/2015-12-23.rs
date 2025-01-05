@@ -3,12 +3,12 @@
 use std::str::FromStr;
 
 use aoc_ornaments::{nom::split_newlines, Part, Solution};
-use nom::{branch::alt, bytes::complete::tag, character::{complete::{alpha1, digit1, not_line_ending, space0, space1}, streaming::line_ending}, combinator::{map, opt}, error::{VerboseError, VerboseErrorKind}, sequence::tuple, IResult};
+use nom::{branch::alt, bytes::complete::tag, character::complete::{alpha1, digit1, space0, space1}, sequence::tuple, IResult};
 
 #[derive(Debug)]
 struct Day {
-    register_a: usize,
-    register_b: usize,
+    register_a: i32,
+    register_b: i32,
     instructions: Vec<Instruction>,
 }
 
@@ -68,135 +68,16 @@ impl Instruction {
             _ => todo!(),
         }
     }
-
-    fn parse_3(input: &str) -> IResult<&str, ()> {
-        todo!()
-    }
 }
 
 impl FromStr for Instruction {
     type Err = miette::Error;
 
     fn from_str(input: &str) -> miette::Result<Self> {
-        // dbg!(input);
-
         let (_, instruction) = Instruction::parse_instruction(input)
             .map_err(|e| miette::miette!(e.to_owned()))?;
 
         Ok(instruction)
-
-        // let (_, b) = tuple((alpha1, space1, 
-        //     alt((alpha1, tuple((opt(tag("+"), tag("-")), digit1)))), 
-        //     opt(tuple((opt(","), space0, alt((tag("+"), tag("-"))), digit1))) ))
-        //     (input)
-        //         .map_err(|e| miette::miette!(e.to_owned()))?;
-
-        // let (_, b) = tuple((
-        //     alpha1,                 // instruction
-        //     space1,                 // required space
-        //     alt((
-        //         // First case: register with optional offset (jio a, +18)
-        //         tuple((
-        //             alpha1,        // register
-        //             opt(tuple((    // optional number part
-        //                 opt(tag(",")),
-        //                 space0,
-        //                 alt((tag("+"), tag("-"))),
-        //                 digit1
-        //             )))
-        //         )),
-        //         // Second case: just number (jmp +22)
-        //         tuple((
-        //             alt((tag("+"), tag("-"))),
-        //             digit1
-        //         ))
-        //     ))
-        // ))(input).map_err(|e| miette::miette!(e.to_owned()))?;
-
-        // let (_, (instruction, _, (register, extra))) = tuple((
-        //     alpha1,                 // instruction
-        //     space1,                 // required space
-        //     alt((
-        //         // First case: register with optional offset (jio a, +18)
-        //         map(tuple((
-        //             alpha1,        // register
-        //             opt(tuple((    // optional number part
-        //                 opt(tag(",")),
-        //                 space0,
-        //                 alt((tag("+"), tag("-"))),
-        //                 digit1
-        //             )))
-        //         )), |(reg, num)| (Some(reg), num)),
-        //         // Second case: just number (jmp +22)
-        //         map(tuple((
-        //             alt((tag("+"), tag("-"))),
-        //             digit1
-        //         )), |(sign, num)| (None, Some((None, "", sign, num))))
-        //     ))
-        // ))(input).map_err(|e: nom::Err<(&str, nom::error::ErrorKind)>| miette::miette!(e.to_owned()))?;
-
-        // dbg!(instruction, register.unwrap(), extra);
-
-        // let (input, (instruction, _, register)) = tuple((alpha1, space1, alpha1))(input)
-        //     .map_err(|e: nom::Err<(&str, nom::error::ErrorKind)>| miette::miette!(e.to_owned()))?;
-
-        // // dbg!(instruction, register);
-
-        // dbg!(input);
-        // let (_, (_, _, sign, number)) = tuple::<_, _, VerboseError<&str>, _>((opt(tag(",")), space0, alt((tag("+"), tag("-"))), digit1))(input)
-        //     // .map_err(|e: nom::Err<(&str, nom::error::ErrorKind)>| miette::miette!(e.to_owned()))?;
-        //     .map_err(|e| match e {
-        //         nom::Err::Error(e) | nom::Err::Failure(e) => {
-        //             nom::Err::Error(VerboseError { errors: vec![(input, VerboseErrorKind::Context("parsing number with sign"))] })
-        //         },
-        //         nom::Err::Incomplete(n) => nom::Err::Incomplete(n),
-        //     }).unwrap();
-        // // dbg!(sign, number);
-
-        // let (a, b) = opt(alt((line_ending, not_line_ending)))(input)
-        //     .map_err(|e: nom::Err<(&str, nom::error::ErrorKind)>| miette::miette!(e.to_owned()))?;
-
-        // let (a, b) = opt(alt((line_ending, tuple((opt(tag(",")), space0, alt((tag("+"), tag("-")), digit1))))))(input)
-        //     .map_err(|e: nom::Err<(&str, nom::error::ErrorKind)>| miette::miette!(e.to_owned()))?;
-
-
-        // let (input, offset) = opt(tuple((alt((tag("+"), tag("-"))), digit1)))(input)
-        //     .map_err(|e: nom::Err<(&str, nom::error::ErrorKind)>| miette::miette!(e.to_owned()))?;
-
-
-
-
-        // let (a, b) = opt(alt((line_ending, tuple((not_line_ending, alt((tag("+"), tag("-"))), digit1)))))(input).expect("failed to parse");
-            // .map_err(|e: nom::Err<(&str, nom::error::ErrorKind)>| miette::miette!(e.to_owned()))?;
-        // let (a, b) = opt((line_ending, tuple((not_line_ending, alt((tag("+"), tag("-"))), digit1)))(input);
-
-        // let parts: Vec<&str> = input.split_whitespace().collect();
-
-        // match parts.as_slice() {
-        //     ["hlf", reg] => Ok(Self::Half(reg.chars().next().unwrap())),
-        //     ["tpl", reg] => Ok(Self::Triple(reg.chars().next().unwrap())),
-        //     ["inc", reg] => Ok(Self::Increment(reg.chars().next().unwrap())),
-        //     ["jmp", offset] => Ok(Self::Jump(offset.parse()?)),
-        //     ["jie", reg, offset] => Ok(Self::JumpIfEven(reg.chars().next().unwrap(), offset.parse()?)),
-        //     ["jio", reg, offset] => Ok(Self::JumpIfOne(reg.chars().next().unwrap(), offset.parse()?)),
-        //     _ => Err(miette::MietteError::from("invalid input")),
-        // }
-
-        // todo!();
-
-        // match instruction {
-        //     "jio" => {
-        //         let (_, _, sign, number) = extra.unwrap();
-        //         Ok(Self::JumpIfOne(register.unwrap().chars().next().unwrap(), format!("{}{}", sign, number).parse().unwrap()))
-        //     },
-        //     "inc" => Ok(Self::Increment(register.unwrap().chars().next().unwrap())),
-        //     "tpl" => Ok(Self::Triple(register.unwrap().chars().next().unwrap())),
-        //     "jmp" => {
-        //         let (_, _, sign, number) = extra.unwrap();
-        //         Ok(Self::Jump(format!("{}{}", sign, number).parse().unwrap()))
-        //     },
-        //     _ => todo!(),
-        // }
     }
 }
 
@@ -223,13 +104,80 @@ impl Day {
         }
     }
 
+    fn get_register(&self, register: char) -> i32 {
+        match register {
+            'a' => self.register_a,
+            'b' => self.register_b,
+            _ => panic!("Invalid register"),
+        }
+    }
+
+    fn set_register(&mut self, register: char, value: i32) {
+        match register {
+            'a' => self.register_a = value,
+            'b' => self.register_b = value,
+            _ => panic!("Invalid register"),
+        }
+    }
+
     fn execute(&mut self) {
-        todo!()
+        let mut ip = 0;  // instruction pointer
+        
+        while ip < self.instructions.len() {
+            let instruction = &self.instructions[ip];
+            
+        //     // Helper closures for register access
+        //     let mut get_reg = |reg| match reg {
+        //         'a' => &mut self.register_a,
+        //         'b' => &mut self.register_b,
+        //         _ => panic!("Invalid register"),
+        //     };
+    
+            // Default is to move to next instruction
+            let mut next_ip = ip + 1;
+    
+            match instruction {
+                Instruction::Half(reg) => {
+                    // *get_reg(*reg) /= 2;
+                    self.set_register(*reg, self.get_register(*reg) / 2);
+                }
+                Instruction::Triple(reg) => {
+                    // *get_reg(*reg) *= 3;
+                    self.set_register(*reg, self.get_register(*reg) * 3);
+                }
+                Instruction::Increment(reg) => {
+                    // *get_reg(*reg) += 1;
+                    self.set_register(*reg, self.get_register(*reg) + 1);
+                }
+                Instruction::Jump(offset) => {
+                    // next_ip = ip + offset;
+                    next_ip = (ip as i32 + offset) as usize;
+                }
+                Instruction::JumpIfEven(reg, offset) => {
+                    // if *get_reg(*reg) % 2 == 0 {
+                    //     next_ip = ip + offset;
+                    // }
+                    if self.get_register(*reg) % 2 == 0 {
+                        next_ip = ip + *offset as usize;
+                    }
+                }
+                Instruction::JumpIfOne(reg, offset) => {
+                    // if *get_reg(*reg) == 1 {
+                    //     next_ip = ip + offset;
+                    // }
+                    if self.get_register(*reg) == 1 {
+                        next_ip = ip + *offset as usize;
+                    }
+                }
+            }
+    
+            ip = next_ip;
+        }
     }
 }
 
 impl Solution for Day {
-    type Output = usize;
+    type Output = i32;
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
         dbg!(&self);
