@@ -90,7 +90,7 @@ impl Solution for Day {
 }
 
 fn main() -> miette::Result<()> {
-    let mut day = Day::from_str(include_str!(".././inputs/2015-12-25.txt"))?;
+    let mut day = Day::from_str(include_str!("../inputs/2015-12-25.txt"))?;
     let part1 = day.solve(Part::One)?;
 
     println!("Part 1: {}", part1);

@@ -6,16 +6,8 @@ use aoc_ornaments::{Part, Solution};
 use itertools::Itertools;
 
 /// char, count
-#[derive(Debug)]
+#[derive(Debug, derive_more::Deref)]
 struct Day(Vec<(u64, char)>);
-
-impl std::ops::Deref for Day {
-    type Target = Vec<(u64, char)>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 impl FromStr for Day {
     type Err = miette::Error;

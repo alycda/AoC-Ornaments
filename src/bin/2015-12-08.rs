@@ -5,16 +5,8 @@ use std::str::FromStr;
 
 use aoc_ornaments::{Part, Solution};
 
-#[derive(Debug)]
+#[derive(Debug, derive_more::Deref)]
 struct Day(Vec<String>);
-
-impl std::ops::Deref for Day {
-    type Target = Vec<String>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 impl FromStr for Day {
     type Err = miette::Error;
@@ -98,7 +90,6 @@ impl Solution for Day {
     }
 }
 
-
 #[derive(Debug)]
 struct StringMetrics {
     code_len: usize,
@@ -107,7 +98,7 @@ struct StringMetrics {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // include_str! will add even more escape sequences and break the code
-    let input = fs::read_to_string("./examples/inputs/2015-12-08.txt")?;
+    let input = fs::read_to_string("../examples/inputs/2015-12-08.txt")?;
     let mut day = Day::from_str(&input)?;
     let part1 = day.solve(Part::One)?;
     let part2 = day.solve(Part::Two)?;

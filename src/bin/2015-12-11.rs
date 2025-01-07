@@ -4,15 +4,8 @@ use std::str::FromStr;
 
 use aoc_ornaments::{Part, Solution};
 
+#[derive(Debug, derive_more::Deref)]
 struct Day(Vec<char>);
-
-impl std::ops::Deref for Day {
-    type Target = Vec<char>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 impl FromStr for Day {
     type Err = miette::MietteError;
@@ -106,7 +99,7 @@ impl Solution for Day {
 }
 
 fn main() -> miette::Result<()> {
-    let mut day = Day::from_str(include_str!("./inputs/2015-12-11.txt"))?;
+    let mut day = Day::from_str(include_str!("../inputs/2015-12-11.txt"))?;
     let part1 = day.solve(Part::One)?;
     let part2 = day.solve(Part::Two)?;
 

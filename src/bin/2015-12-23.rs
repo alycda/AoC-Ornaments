@@ -177,10 +177,10 @@ impl Solution for Day {
 }
 
 fn main() -> miette::Result<()> {
-    let mut day = Day::from_str(include_str!(".././inputs/2015-12-23.txt"))?;
+    let mut day = Day::from_str(include_str!("../inputs/2015-12-23.txt"))?;
     let part1 = day.solve(Part::One)?;
     // state is dirty after part1, need to reset
-    let mut day = Day::from_str(include_str!(".././inputs/2015-12-23.txt"))?;
+    let mut day = Day::from_str(include_str!("../inputs/2015-12-23.txt"))?;
     let part2 = day.solve(Part::Two)?;
 
     println!("Part 1: {}", part1);

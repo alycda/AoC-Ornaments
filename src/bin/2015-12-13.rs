@@ -7,16 +7,8 @@ use aoc_ornaments::{linear::Distances, Part, Solution};
 type Happiness = Distances<i64>;
 
 /// values are NOT reflexive. (A, B) is not the same as (B, A)
-#[derive(Debug)]
+#[derive(Debug, derive_more::Deref)]
 struct Day(Happiness);
-
-impl std::ops::Deref for Day {
-    type Target = Happiness;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 impl FromStr for Day {
     type Err = miette::Error;
@@ -107,7 +99,7 @@ impl Solution for Day {
 }
 
 fn main() -> miette::Result<()> {
-    let mut day = Day::from_str(include_str!("./inputs/2015-12-13.txt"))?;
+    let mut day = Day::from_str(include_str!("../inputs/2015-12-13.txt"))?;
     let part1 = day.solve(Part::One)?;
     let part2 = day.solve(Part::Two)?;
 

@@ -97,8 +97,6 @@ impl Solution for Day {
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
         Ok(self.iter()
             .map(|(_name, stats)| {
-                // let (speed, time, rest) = stats;
-                // let distance = Day::seconds(2503, ReindeerStats { speed: *speed, time: *time, rest: *rest });
                 let distance = Day::seconds(2503, stats);
                 distance
             }).max().unwrap())
@@ -113,7 +111,7 @@ impl Solution for Day {
 }
 
 fn main() -> miette::Result<()> {
-    let mut day = Day::from_str(include_str!("./inputs/2015-12-14.txt"))?;
+    let mut day = Day::from_str(include_str!("../inputs/2015-12-14.txt"))?;
     let part1 = day.solve(Part::One)?;
     let part2 = day.solve(Part::Two)?;
 

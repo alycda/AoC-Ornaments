@@ -123,7 +123,7 @@ impl<J> Solution for Day<J> where Day<J>: FromStr {
 }
 
 fn main() -> miette::Result<()> {
-    let input = include_str!("./inputs/2015-12-12.txt");
+    let input = include_str!("../inputs/2015-12-12.txt");
     let mut day_part1 = Day::<Text>::from_str(input)?;
     let mut day_part2 = Day::<Jasn>::from_str(input)?;
     let part1 = day_part1.solve(Part::One)?;

@@ -145,16 +145,8 @@ impl From<Vec<(&str, i32)>> for Properties {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, derive_more::Deref)]
 struct Day(Ingredients);
-
-impl std::ops::Deref for Day {
-    type Target = Ingredients;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 impl FromStr for Day {
     type Err = miette::Error;
@@ -279,7 +271,7 @@ impl Solution for Day {
 }
 
 fn main() -> miette::Result<()> {
-    let mut day = Day::from_str(include_str!("./inputs/2015-12-15.txt"))?;
+    let mut day = Day::from_str(include_str!("../inputs/2015-12-15.txt"))?;
     let part1 = day.solve(Part::One)?;
     let part2 = day.solve(Part::Two)?;
 
