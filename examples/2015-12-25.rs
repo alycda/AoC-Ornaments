@@ -2,7 +2,7 @@
 
 use std::str::FromStr;
 
-use aoc_ornaments::{spatial::{Position, UniquePositions}, Part, Solution};
+use aoc_ornaments::{spatial::Position, Part, Solution};
 use nom::{branch::alt, bytes::complete::{tag, take_until}, character::complete::{digit1, space0}, combinator::{map, map_res}, sequence::{preceded, tuple}, IResult};
 
 #[derive(Debug)]
@@ -32,8 +32,6 @@ impl Day {
         std::iter::successors(Some((Position::ONE, first)), |&(pos, prev)| {
             let north_east = pos + Position::new(1, -1);
             let down = Position::new(1, pos.x + 1);
-            
-            // dbg!(&north_east, &down);
 
             let next = if north_east.y < 1 {
                 down
@@ -102,10 +100,41 @@ impl Solution for Day {
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("./inputs/2015-12-25.txt"))?;
     let part1 = day.solve(Part::One)?;
-    // let part2 = day.solve(Part::Two)?;
 
     println!("Part 1: {}", part1);
-    // println!("Part 2: {}", part2);
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_part1() {
+        let mut positions = Day::generate_codes(1);
+
+        assert_eq!(positions.next().unwrap(), (Position::ONE, 1));
+        assert_eq!(positions.next().unwrap().0, (Position::new(1, 2)));
+        assert_eq!(positions.next().unwrap().0, (Position::new(2, 1)));
+        assert_eq!(positions.next().unwrap().0, (Position::new(1, 3)));
+        assert_eq!(positions.next().unwrap().0, (Position::splat(2)));
+        assert_eq!(positions.next().unwrap().0, (Position::new(3, 1)));
+        assert_eq!(positions.next().unwrap().0, (Position::new(1, 4)));
+        assert_eq!(positions.next().unwrap().0, (Position::new(2, 3)));
+        assert_eq!(positions.next().unwrap().0, (Position::new(3, 2)));
+        assert_eq!(positions.next().unwrap().0, (Position::new(4, 1)));
+        assert_eq!(positions.next().unwrap().0, (Position::new(1, 5)));
+        assert_eq!(positions.next().unwrap().0, (Position::new(2, 4)));
+        assert_eq!(positions.next().unwrap().0, (Position::splat(3)));
+        assert_eq!(positions.next().unwrap().0, (Position::new(4, 2)));
+        assert_eq!(positions.next().unwrap().0, (Position::new(5, 1)));
+        assert_eq!(positions.next().unwrap().0, (Position::new(1, 6)));
+        assert_eq!(positions.next().unwrap().0, (Position::new(2, 5)));
+        assert_eq!(positions.next().unwrap().0, (Position::new(3, 4)));
+        assert_eq!(positions.next().unwrap().0, (Position::new(4, 3)));
+        assert_eq!(positions.next().unwrap().0, (Position::new(5, 2)));
+        assert_eq!(positions.next().unwrap().0, (Position::new(6, 1)));
+        assert_eq!(positions.next().unwrap().0, (Position::new(1, 7)));
+    }
 }
