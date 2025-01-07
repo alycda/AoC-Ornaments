@@ -5,16 +5,8 @@ use std::str::FromStr;
 use aoc_ornaments::{spatial::Position, Part, Solution};
 use nom::{branch::alt, bytes::complete::{tag, take_until}, character::complete::{digit1, space0}, combinator::{map, map_res}, sequence::{preceded, tuple}, IResult};
 
-#[derive(Debug)]
+#[derive(Debug, derive_more::Deref)]
 struct Day(Position);
-
-impl std::ops::Deref for Day {
-    type Target = Position;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 impl FromStr for Day {
     type Err = miette::Error;
@@ -98,7 +90,7 @@ impl Solution for Day {
 }
 
 fn main() -> miette::Result<()> {
-    let mut day = Day::from_str(include_str!("./inputs/2015-12-25.txt"))?;
+    let mut day = Day::from_str(include_str!(".././inputs/2015-12-25.txt"))?;
     let part1 = day.solve(Part::One)?;
 
     println!("Part 1: {}", part1);
@@ -111,7 +103,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_part1() {
+    fn test_diagonal_positions() {
         let mut positions = Day::generate_codes(1);
 
         assert_eq!(positions.next().unwrap(), (Position::ONE, 1));
