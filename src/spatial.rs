@@ -11,7 +11,6 @@ pub fn manhattan_distance(a: &Position, b: &Position) -> i32 {
 
 /// a Region or set of Positions
 pub type UniquePositions = HashSet<Position>;
-
 /// Up, Right, Down, Left
 pub const DIRECTIONS: [Position; 4] = [Position::NEG_Y, Position::X, Position::Y, Position::NEG_X];
 
@@ -89,21 +88,20 @@ impl<T: std::fmt::Debug + Copy + PartialEq> Grid<T> {
         Some(self[pos.y as usize][pos.x as usize])
         // Some(self.get_at_unbounded(pos))
     }
-
     /// ORTHOGONAL neighbors. use [Self::get_all_neighbors] for all 8
     pub fn get_neighbors(&self, pos: Position) -> Vec<(Position, T)> {
         let mut neighbors = Vec::with_capacity(4);
 
         for delta in DIRECTIONS.iter() {
             let new_pos = pos + *delta;
-            
+
             // Boundary check matching the working version
             if new_pos.x >= 0 && new_pos.x < self.get_width() as i32 && 
                new_pos.y >= 0 && new_pos.y < self.get_height() as i32 {
                 neighbors.push((new_pos, self.get_at_unbounded(new_pos)));
             }
         }
-        
+
         neighbors
     }
 
@@ -112,14 +110,14 @@ impl<T: std::fmt::Debug + Copy + PartialEq> Grid<T> {
 
         for delta in ALL_DIRECTIONS.iter() {
             let new_pos = pos + *delta;
-            
+
             // Boundary check matching the working version
             if new_pos.x >= 0 && new_pos.x < self.get_width() as i32 && 
                new_pos.y >= 0 && new_pos.y < self.get_height() as i32 {
                 neighbors.push((new_pos, self.get_at_unbounded(new_pos)));
             }
         }
-        
+
         neighbors
     }
 

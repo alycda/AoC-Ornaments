@@ -4,16 +4,8 @@ use std::{ops::Not, str::FromStr};
 
 use aoc_ornaments::{spatial::Grid, Part, Solution};
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, derive_more::Deref, Clone, Copy, PartialEq)]
 pub struct Part1(bool);
-
-impl std::ops::Deref for Part1 {
-    type Target = bool;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 impl From<bool> for Part1 {
     fn from(value: bool) -> Self {

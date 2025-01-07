@@ -4,16 +4,8 @@ use std::{collections::HashSet, str::FromStr};
 
 use aoc_ornaments::{linear::Distances, Part, Solution};
 
-#[derive(Debug)]
+#[derive(Debug, derive_more::Deref)]
 struct Day(Distances<u32>);
-
-impl std::ops::Deref for Day {
-    type Target = Distances<u32>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 impl FromStr for Day {
     type Err = miette::Error;
