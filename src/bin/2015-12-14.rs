@@ -138,11 +138,8 @@ mod tests {
 //         let input = "Comet can fly 14 km/s for 10 seconds, but then must rest for 127 seconds.
 // Dancer can fly 16 km/s for 11 seconds, but then must rest for 162 seconds.";
 
-        // let mut day = Day::from_str(input).unwrap();
-        let a = dbg!(Day::seconds(seconds, &ReindeerStats { speed: 14, time: 10, rest: 127 }));
-        let b = dbg!(Day::seconds(seconds, &ReindeerStats { speed: 16, time: 11, rest: 162 }));
-
-        // let actual = day.solve(Part::One).unwrap();
+        let a = Day::seconds(seconds, &ReindeerStats { speed: 14, time: 10, rest: 127 });
+        let b = Day::seconds(seconds, &ReindeerStats { speed: 16, time: 11, rest: 162 });
 
         assert_eq!(expected, (a, b));
     }
@@ -153,13 +150,10 @@ mod tests {
 //         let input = "Comet can fly 14 km/s for 10 seconds, but then must rest for 127 seconds.
 // Dancer can fly 16 km/s for 11 seconds, but then must rest for 162 seconds.";
 
-        // let mut day = Day::from_str(input).unwrap();
         let all = dbg!(Day::points(seconds, &[
             &ReindeerStats { speed: 14, time: 10, rest: 127 },
             &ReindeerStats { speed: 16, time: 11, rest: 162 },
         ]));
-
-        // let actual = day.solve(Part::Two).unwrap();
 
         assert_eq!(expected, (all[0], all[1]));
     }

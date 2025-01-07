@@ -3,28 +3,58 @@
 use std::str::FromStr;
 
 use aoc_ornaments::{Part, Solution};
-use nom::{branch::alt, bytes::complete::{tag, take_until}, character::complete::{not_line_ending, space0, u32}, combinator::{map, opt}, multi::separated_list1, sequence::{terminated, tuple}, IResult};
+use nom::{branch::alt, bytes::complete::{tag, take_until}, character::complete::{not_line_ending, space0, i32, u32}, combinator::{map, opt}, multi::separated_list1, sequence::{terminated, tuple}, IResult};
 use std::collections::{BinaryHeap, HashSet};
 use std::cmp::Ordering;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 struct Player {
-    hp: u32,
-    mana: u32,
+    hp: i32,
+    mana: i32,
 }
 
-#[derive(Debug, Clone, Copy)]
+impl Default for Player {
+    fn default() -> Self {
+        Self { hp: 50, mana: 500 }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 struct Boss {
-    hp: u32,
-    damage: u32,
+    hp: i32,
+    damage: i32,
+}
+
+impl FromStr for Boss {
+    type Err = miette::Error;
+
+    fn from_str(input: &str) -> miette::Result<Self> {
+        let (_, boss) = Self::parse_boss_stats(input)
+            .map_err(|e| miette::miette!(e.to_owned()))?;
+
+        Ok(boss)
+    }
 }
 
 impl Boss {
-    fn new(hp: &str, damage: &str) -> Self {
-        Self {
-            hp: hp.parse().unwrap(),
-            damage: damage.parse().unwrap(),
-        }
+    fn parse_boss_stats(input: &str) -> IResult<&str, Boss> {
+        let (input, (_, hp)) = Self::parse_stat_line(input)?;
+        let (_, (_, damage)) = Self::parse_stat_line(input)?;
+
+        Ok((input, Boss { hp, damage }))
+    }
+
+    fn parse_stat_line(input: &str) -> IResult<&str, (String, i32)> {
+        let (input, (key, _, _, value)) = tuple((
+            // Parse the key (e.g. "Hit Points")
+            terminated(take_until(":"), space0),
+            tag(":"),
+            space0,
+            // Parse the number
+            i32,
+        ))(input)?;
+
+        Ok((input, (key.to_string(), value)))
     }
 }
 
@@ -38,12 +68,6 @@ struct Spell {
     effect: Option<Effect>,
 }
 
-impl Spell {
-    fn cast() {
-        todo!()
-    }
-}
-
 #[derive(Debug, Clone, Copy)]
 enum Effect {
     /// duration, effect
@@ -55,43 +79,20 @@ enum Effect {
     Heal(u32),
 }
 
-#[derive(Debug)]
-struct Day(Player, Vec<Spell>, Boss);
+#[derive(Debug, derive_more::Deref)]
+struct Day(Vec<Spell>);
 
 impl FromStr for Day {
     type Err = miette::Error;
 
     fn from_str(input: &str) -> miette::Result<Self> {
-        let (_, boss) = Self::parse_boss_stats(input)
-            // .map(|(_, boss)| boss)
-            .map_err(|e| miette::miette!(e.to_owned()))?;
+        let (_, spells) = Self::parse_spells(input).map_err(|e| miette::miette!(e.to_owned()))?;
         
-
-        Ok(Self(Player { hp: 50, mana: 500 }, vec![], boss))
+        Ok(Self(spells))
     }
 }
 
 impl Day {
-    fn parse_boss_stats(input: &str) -> IResult<&str, Boss> {
-        let (input, (_, hp)) = Self::parse_stat_line(input)?;
-        let (_, (_, damage)) = Self::parse_stat_line(input)?;
-
-        Ok((input, Boss { hp, damage }))
-    }
-
-    fn parse_stat_line(input: &str) -> IResult<&str, (String, u32)> {
-        let (input, (key, _, _, value)) = tuple((
-            // Parse the key (e.g. "Hit Points")
-            terminated(take_until(":"), space0),
-            tag(":"),
-            space0,
-            // Parse the number
-            u32,
-        ))(input)?;
-
-        Ok((input, (key.to_string(), value)))
-    }
-
     fn parse_spell(input: &str) -> IResult<&str, Spell> {
         let mut damage = 0;
         let mut effect = None;
@@ -144,7 +145,6 @@ impl Day {
     }
 
     fn duration_effect(input: &str) -> IResult<&str, Vec<Effect>> {
-        // dbg!(input);
         let (input, _) = tag("It starts an effect that lasts for ")(input)?;
 
         let (input, turns) = u32(input)?;
@@ -184,15 +184,9 @@ impl Day {
     // More accurately: finds a keyword and then extracts a nearby number
     fn effect_value_parser(keyword: &'static str) -> impl Fn(&str) -> IResult<&str, u32> {
         move |original_input: &str| {
-            // dbg!(original_input);
-
             // First find the keyword
             let (input, _) = take_until(keyword)(original_input)?;
-            // dbg!(input);
-
-            let (input, _) = tag(keyword)(input)?;
-
-            // dbg!(input);
+            let (_, _) = tag(keyword)(input)?;
 
             // Now find the next number, skipping any text in between
             let (input, _) = Self::take_until_number(original_input)?;
@@ -222,26 +216,12 @@ impl Day {
 
         Ok((input, spells))
     }
-
-    fn init_spells(&mut self) -> miette::Result<()> {
-        let input = "Magic Missile costs 53 mana. It instantly does 4 damage.
-Drain costs 73 mana. It instantly does 2 damage and heals you for 2 hit points.
-Shield costs 113 mana. It starts an effect that lasts for 6 turns. While it is active, your armor is increased by 7.
-Poison costs 173 mana. It starts an effect that lasts for 6 turns. At the start of each turn while it is active, it deals the boss 3 damage.
-Recharge costs 229 mana. It starts an effect that lasts for 5 turns. At the start of each turn while it is active, it gives you 101 new mana.";
-
-        let (_, spells) = Self::parse_spells(input).map_err(|e| miette::miette!(e.to_owned()))?;
-        self.1 = spells;
-
-        Ok(())
-    }
 }
 
 #[derive(Clone, Eq, Hash)]
 struct GameState {
-    player_hp: i32,
-    player_mana: i32,
-    boss_hp: i32,
+    player: Player,
+    boss: Boss,
     mana_spent: i32,
     shield_timer: i32,
     poison_timer: i32,
@@ -267,11 +247,10 @@ impl PartialOrd for GameState {
 }
 
 impl GameState {
-    fn new(player_hp: i32, player_mana: i32, boss_hp: i32) -> Self {
+    fn new(player: Player, boss: Boss) -> Self {
         Self {
-            player_hp,
-            player_mana,
-            boss_hp,
+            player,
+            boss,
             mana_spent: 0,
             shield_timer: 0,
             poison_timer: 0,
@@ -282,26 +261,26 @@ impl GameState {
     fn apply_effects(&mut self) {
         if self.shield_timer > 0 { self.shield_timer -= 1; }
         if self.poison_timer > 0 { 
-            self.boss_hp -= 3;
+            self.boss.hp -= 3;
             self.poison_timer -= 1; 
         }
         if self.recharge_timer > 0 { 
-            self.player_mana += 101;
+            self.player.mana += 101;
             self.recharge_timer -= 1;
         }
     }
 
     fn cast_spell(&mut self, spell: &Spell) -> bool {
-        if self.player_mana < spell.cost as i32 { return false; }
+        if self.player.mana < spell.cost as i32 { return false; }
 
-        self.player_mana -= spell.cost as i32;
+        self.player.mana -= spell.cost as i32;
         self.mana_spent += spell.cost as i32;
 
         match spell.name.as_str() {
-            "Magic Missile" => self.boss_hp -= 4,
+            "Magic Missile" => self.boss.hp -= 4,
             "Drain" => {
-                self.boss_hp -= 2;
-                self.player_hp += 2;
+                self.boss.hp -= 2;
+                self.player.hp += 2;
             },
             "Shield" => {
                 if self.shield_timer > 0 { return false; }
@@ -330,44 +309,46 @@ impl Day {
     fn find_least_mana(&self, mode: GameMode) -> Option<i32> {
         let mut heap = BinaryHeap::new();
         let mut seen = HashSet::new();
+        let player = Player::default();    
+        let boss = Boss::from_str(include_str!("../inputs/2015-12-22.txt")).expect("Failed to parse boss stats");
         
-        let initial = GameState::new(50, 500, self.2.hp as i32);
+        let initial = GameState::new(player, boss);
         heap.push(initial.clone());
         seen.insert(initial);
 
         while let Some(mut state) = heap.pop() {
             if let GameMode::Hard = mode {
-                state.player_hp -= 1;
-                if state.player_hp <= 0 { continue; }
+                state.player.hp -= 1;
+                if state.player.hp <= 0 { continue; }
             }
 
             // Boss is dead?
-            if state.boss_hp <= 0 {
+            if state.boss.hp <= 0 {
                 return Some(state.mana_spent);
             }
 
             // Player's turn
             state.apply_effects();
-            if state.boss_hp <= 0 {
+            if state.boss.hp <= 0 {
                 return Some(state.mana_spent);
             }
 
             // Try each spell
-            for spell in &self.1 {
+            for spell in &self.0 {
                 let mut new_state = state.clone();
                 if !new_state.cast_spell(spell) { continue; }
 
                 // Boss turn
                 new_state.apply_effects();
-                if new_state.boss_hp <= 0 {
+                if new_state.boss.hp <= 0 {
                     return Some(new_state.mana_spent);
                 }
 
                 // Boss attacks
                 let armor = if new_state.shield_timer > 0 { 7 } else { 0 };
-                new_state.player_hp -= std::cmp::max(1, self.2.damage as i32 - armor);
+                new_state.player.hp -= std::cmp::max(1, boss.damage as i32 - armor);
 
-                if new_state.player_hp > 0 && !seen.contains(&new_state) {
+                if new_state.player.hp > 0 && !seen.contains(&new_state) {
                     seen.insert(new_state.clone());
                     heap.push(new_state);
                 }
@@ -382,22 +363,23 @@ impl Solution for Day {
     type Output = i32;
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        self.init_spells()?;
-        // dbg!(&self);
-
-        Self::find_least_mana(&self, GameMode::Normal).ok_or_else(|| miette::miette!("No solution found"))
+        Self::find_least_mana(&self, GameMode::Normal)
+            .ok_or_else(|| miette::miette!("No solution found"))
     }
 
     fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        self.init_spells()?;
-        // dbg!(&self);
-
-        Self::find_least_mana(&self, GameMode::Hard).ok_or_else(|| miette::miette!("No solution found"))
+        Self::find_least_mana(&self, GameMode::Hard)
+            .ok_or_else(|| miette::miette!("No solution found"))
     }
 }
 
 fn main() -> miette::Result<()> {
-    let mut day = Day::from_str(include_str!("./inputs/2015-12-22.txt"))?;
+    let mut day = Day::from_str("Magic Missile costs 53 mana. It instantly does 4 damage.
+Drain costs 73 mana. It instantly does 2 damage and heals you for 2 hit points.
+Shield costs 113 mana. It starts an effect that lasts for 6 turns. While it is active, your armor is increased by 7.
+Poison costs 173 mana. It starts an effect that lasts for 6 turns. At the start of each turn while it is active, it deals the boss 3 damage.
+Recharge costs 229 mana. It starts an effect that lasts for 5 turns. At the start of each turn while it is active, it gives you 101 new mana.")?;
+
     let part1 = day.solve(Part::One)?;
     let part2 = day.solve(Part::Two)?;
 

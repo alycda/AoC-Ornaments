@@ -89,8 +89,6 @@ impl Properties {
     }
 
     fn teaspoon(&self, count: usize) -> Self {
-        // self.capacity * self.durability * self.flavor * self.texture
-
         Self {
             capacity: self.capacity * count as i32,
             durability: self.durability * count as i32,
@@ -177,13 +175,10 @@ impl Day {
     }
 
     fn parse_properties(input: &str) -> IResult<&str, Vec<(&str, i32)>> {
-        // let (remainder, props) = 
         separated_list1(
             delimited(space0, tag(","), space0),  // This handles " , " as separator
             Self::parse_property
         )(input)
-
-        // Ok((remainder, Properties::from(props)))
     }
 
     // Parse a single property like "capacity 2"
