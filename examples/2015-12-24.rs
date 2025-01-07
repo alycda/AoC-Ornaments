@@ -94,6 +94,14 @@ impl Day {
 impl Solution for Day {
     type Output = usize;
 
+    // for n in range(1,len(weights)):
+    // good = [x for x in list(combinations(weights,n)) if sum(x) == sum(weights)/3]
+    // if len(good) > 0:
+    //     break
+
+    // smallest = min(good, key=lambda x: reduce(mul, x))
+    // print reduce(mul, smallest)
+
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
         let total_weight = dbg!(self.iter().sum::<usize>());
         let group_weight = total_weight / 3;
@@ -106,11 +114,37 @@ impl Solution for Day {
         // let products = Self::get_products(&combinations);
         // println!("Products of combinations: {:?}", products);
 
-        let a = Self::find_best_combination(&self.iter().copied().collect::<Vec<_>>(), group_weight)
-            .map(|(_, product)| product as usize);
-            // .ok_or_else(|| "No valid combination found".into())
+        // let a = Self::find_best_combination(&self.iter().copied().collect::<Vec<_>>(), group_weight)
+        //     .map(|(_, product)| product as usize);
+        //     // .ok_or_else(|| "No valid combination found".into())
 
-        Ok(a.unwrap())
+        // Ok(a.unwrap())
+
+        // Find first group of valid combinations
+        let mut good_combinations = Vec::new();
+        for n in 1..self.len() {
+            good_combinations = self.iter()
+                .combinations(n)
+                .filter(|combo| combo.iter().copied().sum::<usize>() == group_weight)
+                .map(|combo| combo.iter().copied().cloned().collect::<Vec<_>>())
+                .collect();
+                
+            if !good_combinations.is_empty() {
+                break;
+            }
+        }
+
+        // Find the combination with smallest product
+        if let Some(smallest) = good_combinations.iter()
+            .min_by_key(|combo| combo.iter().product::<usize>()) 
+        {
+            let product: usize = smallest.iter().product();
+            println!("Smallest product: {}", product);
+
+            return Ok(product)
+        }
+
+        todo!()
     }
 }
 
