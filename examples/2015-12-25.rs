@@ -3,7 +3,7 @@
 use std::str::FromStr;
 
 use aoc_ornaments::{spatial::{Position, UniquePositions}, Part, Solution};
-use nom::{branch::alt, bytes::complete::{tag, take_until}, character::complete::{alpha1, digit1, space0}, combinator::{map, map_res}, sequence::{preceded, tuple}, IResult};
+use nom::{branch::alt, bytes::complete::{tag, take_until}, character::complete::{digit1, space0}, combinator::{map, map_res}, sequence::{preceded, tuple}, IResult};
 
 #[derive(Debug)]
 struct Day(Position);
@@ -20,56 +20,39 @@ impl FromStr for Day {
     type Err = miette::Error;
 
     fn from_str(input: &str) -> miette::Result<Self> {
-        // let (input, _) = take_until("row")(input).or_else(|_| take_until("column")(input)).map_err(|_| miette::miette!("bad"))?;
-        // let (a, b) = tuple((alpha1, tag("row"), space0, digit1))(input).map_err(|e| miette::miette!("bad"))?;
+        let (_, (x, y)) = Self::find_position(input)
+            .map_err(|e| miette::miette!(e.to_owned()))?;
 
-
-        let (_, (x, y)) = Self::find_position(input).map_err(|e| miette::miette!(e.to_owned()))?;
         Ok(Self(Position::new(x, y)))
     }
 }
 
 impl Day {
-    fn generate_codes() {
-        todo!()
+    fn generate_codes(first: usize) -> impl Iterator<Item = (Position, usize)> {
+        std::iter::successors(Some((Position::ONE, first)), |&(pos, prev)| {
+            let north_east = pos + Position::new(1, -1);
+            let down = Position::new(1, pos.x + 1);
+            
+            // dbg!(&north_east, &down);
+
+            let next = if north_east.y < 1 {
+                down
+            } else {
+                north_east
+            };
+
+            Some((next, (prev * 252533) % 33554393))
+        })
     }
 
     /// (x, y)
     fn find_position(input: &str) -> IResult<&str, (i32, i32)> {
-        // let (input, _) = take_until(alt((tag("row"), tag("column"))))(input)?;
         let (input, _) = alt((take_until("row"), take_until("column")))(input)?;
 
-        alt((
-            // // row then column
-            // tuple((
-            //     number_after("row "),
-            //     preceded(tag(" "), Self::number_after("column "))
-            // )),
-            // row then column - swap the tuple
-            map(
-                tuple((
-                    Self::number_after("row "),
-                    // preceded(tag(" "), Self::number_after("column "))
-                    preceded(
-                        tuple((space0, tag(","), space0)),
-                        Self::number_after("column ")
-                    ),
-                )),
-                |(row, col)| (col, row)
-            ),
-            // column then row
-            tuple((
-                Self::number_after("column "),
-                // preceded(tag(" "), Self::number_after("row "))
-                preceded(
-                    tuple((space0, tag(","), space0)),
-                    Self::number_after("row ")
-                )
-            ))
-        ))(input)
+        Self::find_coordinates(input)
     }
 
-    fn number_after(prefix: &'static str) -> impl Fn(&str) -> IResult<&str, i32> {
+    fn prefixed_number(prefix: &'static str) -> impl Fn(&str) -> IResult<&str, i32> {
         move |input| {
             map_res(
                 preceded(tag(prefix), digit1),
@@ -78,18 +61,41 @@ impl Day {
         }
     }
 
-    // fn find_num(input: &str) -> IResult<&str, usize> {
-    //     todo!()
-    // }
+    fn find_coordinates(input: &str) -> IResult<&str, (i32, i32)> {
+        alt((
+            // row then column - swap the tuple
+            map(
+                tuple((
+                    Self::prefixed_number("row "),
+                    preceded(
+                        tuple((space0, tag(","), space0)),
+                        Self::prefixed_number("column ")
+                    ),
+                )),
+                |(row, col)| (col, row)
+            ),
+            // column then row
+            tuple((
+                Self::prefixed_number("column "),
+                preceded(
+                    tuple((space0, tag(","), space0)),
+                    Self::prefixed_number("row ")
+                )
+            ))
+        ))(input)
+    }
 }
 
 impl Solution for Day {
     type Output = usize;
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        dbg!(self);
+        let mut generator = Self::generate_codes(20151125);
 
-        todo!()
+        generator
+            .find(|(pos, _)| *pos == **self)
+            .map(|(_, code)| code)
+            .ok_or_else(|| miette::miette!("No code found"))
     }
 }
 
