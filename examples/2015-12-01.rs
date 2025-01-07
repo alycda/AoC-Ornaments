@@ -4,15 +4,8 @@ use std::str::FromStr;
 
 use aoc_ornaments::{Part, Solution};
 
+#[derive(Debug, derive_more::Deref)]
 struct Day(Vec<i32>);
-
-impl std::ops::Deref for Day {
-    type Target = Vec<i32>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 impl Solution for Day {
     type Output = i32;

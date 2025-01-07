@@ -4,21 +4,8 @@ use std::str::FromStr;
 
 use aoc_ornaments::{spatial::{Grid, Position}, Part, Solution};
 
+#[derive(Debug, derive_more::Deref, derive_more::DerefMut)]
 struct Day(Grid<bool>);
-
-impl std::ops::Deref for Day {
-    type Target = Grid<bool>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl std::ops::DerefMut for Day {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
 
 impl FromStr for Day {
     type Err = miette::Error;
