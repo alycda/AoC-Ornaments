@@ -7,22 +7,8 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
-#[derive(Debug)]
+#[derive(Debug, derive_more::Deref, derive_more::DerefMut)]
 pub struct Distances<T>(BTreeMap<(String, String), T>);
-
-impl<T> std::ops::Deref for Distances<T> {
-    type Target = BTreeMap<(String, String), T>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl<T> std::ops::DerefMut for Distances<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
 
 impl<T: std::ops::Add<Output = T> + Clone + Copy + Ord> Distances<T> {
     pub fn new() -> Self {

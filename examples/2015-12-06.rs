@@ -21,27 +21,11 @@ impl Not for Part1 {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, derive_more::Deref, Clone, Copy, PartialEq)]
 pub struct Part2(u32);
-
-impl std::ops::Deref for Part2 {
-    type Target = u32;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 #[derive(Debug)]
 struct Day<P>(Grid<P>);
-
-impl<P> std::ops::Deref for Day<P> {
-    type Target = Grid<P>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 impl FromStr for Day<Part1> {
     type Err = miette::Error;

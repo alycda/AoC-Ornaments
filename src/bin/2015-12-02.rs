@@ -24,16 +24,8 @@ fn dimensions(input: &str) -> IResult<&str, (u32, u32, u32)> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, derive_more::Deref)]
 struct Day(Vec<(u32, u32, u32)>);
-
-impl std::ops::Deref for Day {
-    type Target = Vec<(u32, u32, u32)>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 impl Day {
     fn dimensions(sides: (u32, u32, u32)) -> u32 {

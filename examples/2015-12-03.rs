@@ -4,24 +4,8 @@ use std::{collections::HashSet, str::FromStr};
 
 use aoc_ornaments::{spatial::{Direction, Position, Visited}, Part, Solution};
 
-#[derive(Debug)]
+#[derive(Debug, derive_more::Deref)]
 pub struct Part1(Visited<usize>);
-
-impl std::ops::Deref for Part1 {
-    type Target = Visited<usize>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl std::ops::Deref for Day<Part1> {
-    type Target = Visited<usize>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 #[derive(Debug)]
 pub struct Part2 {
