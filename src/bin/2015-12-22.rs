@@ -64,8 +64,8 @@ struct Spell {
     name: String,
     cost: u32,
     /// instant
-    damage: u32,
-    effect: Option<Effect>,
+    _damage: u32,
+    _effect: Option<Effect>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -94,8 +94,8 @@ impl FromStr for Day {
 
 impl Day {
     fn parse_spell(input: &str) -> IResult<&str, Spell> {
-        let mut damage = 0;
-        let mut effect = None;
+        let mut _damage = 0;
+        let mut _effect = None;
     
         let (input, (name, _, cost, _, description)) = tuple((
             take_until(" costs"),    
@@ -110,13 +110,13 @@ impl Day {
         for eff in effects {
             match eff {
                 // Only set damage for instant damage effects
-                Effect::Damage(0, d) => damage = d,
+                Effect::Damage(0, d) => _damage = d,
                 // Otherwise store it as an effect
-                any => effect = Some(any),
+                any => _effect = Some(any),
             }
         }
     
-        Ok((input, Spell { name: name.to_string(), cost, damage, effect }))
+        Ok((input, Spell { name: name.to_string(), cost, _damage, _effect }))
     }
 
     fn parse_effect(input: &str) -> IResult<&str, Vec<Effect>> {

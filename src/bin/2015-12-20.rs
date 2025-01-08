@@ -4,22 +4,8 @@ use std::str::FromStr;
 
 use aoc_ornaments::{Part, Solution};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, derive_more::Deref, derive_more::DerefMut, Clone, Copy)]
 struct Day(usize);
-
-impl std::ops::Deref for Day {
-    type Target = usize;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl std::ops::DerefMut for Day {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
 
 impl FromStr for Day {
     type Err = miette::Error;
@@ -29,7 +15,11 @@ impl FromStr for Day {
     }
 }
 
-impl Day { }
+impl Day { 
+    fn _house_presents() {
+        todo!()
+    }
+}
 
 impl Solution for Day {
     type Output = usize;
@@ -83,7 +73,7 @@ impl Solution for Day {
 }
 
 fn main() -> miette::Result<()> {
-    let mut day = Day::from_str(include_str!("./inputs/2015-12-20.txt"))?;
+    let mut day = Day::from_str(include_str!("../inputs/2015-12-20.txt"))?;
     let part1 = day.solve(Part::One)?;
     let part2 = day.solve(Part::Two)?;
 
@@ -91,4 +81,25 @@ fn main() -> miette::Result<()> {
     println!("Part 2: {}", part2);
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use rstest::rstest;
+
+    #[rstest]
+    #[case(1, 10)]
+    #[case(2, 30)]
+    #[case(3, 40)]
+    #[case(4, 70)]
+    #[case(5, 60)]
+    #[case(6, 120)]
+    #[case(7, 80)]
+    #[case(8, 150)]
+    #[case(9, 130)]
+    fn test_house_presents(#[case] house: usize, #[case] presents: usize) {
+        todo!()
+    }
 }

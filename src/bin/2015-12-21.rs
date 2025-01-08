@@ -12,138 +12,28 @@ struct Stats {
     armor: u32,
 }
 
-type Player = Stats;
-type Boss = Stats;
-
-#[derive(Debug)]
-struct Item {
-    name: String,
-    cost: u32,
-    damage: u32,
-    armor: u32,
-}
-
-impl Item {
-    fn new(name: String, cost: &str, damage: &str, armor: &str) -> Self {
+impl Default for Stats {
+    fn default() -> Self {
         Self {
-            name,
-            cost: cost.parse().expect("a number"),
-            damage: damage.parse().expect("a number"),
-            armor: armor.parse().expect("a number"),
+            hp: 100,
+            damage: 0,
+            armor: 0,
         }
     }
 }
 
-type Weapon = Item;
-type Armor = Item;
-type Ring = Item;
-
-/// Shop
-#[derive(Debug)]
-struct Items {
-    weapons: Vec<Weapon>,
-    armor: Vec<Armor>,
-    rings: Vec<Ring>,
-}
-
-impl Items {
-    fn new() -> Self {
-        Self {
-            weapons: vec![],
-            armor: vec![],
-            rings: vec![],
-        }
-    }
-}
-
-#[derive(Debug)]
-struct Day(Player, Items, Boss);
-
-impl FromStr for Day {
+impl FromStr for Stats {
     type Err = miette::Error;
 
     fn from_str(input: &str) -> miette::Result<Self> {
         let (_, stats) = split_newlines(input)?;
         let boss = Self::parse_stats(&stats)?;
 
-        // todo: manually derive these default stats
-        let player = Stats {
-            hp: 100,
-            damage: 0,
-            armor: 0,
-        };
-
-        Ok(Self(player, Items::new(), boss))
+        Ok(boss)
     }
 }
 
-impl Day {
-    fn generate_loadouts(&self) -> Vec<Vec<&Item>> {
-        let mut loadouts = Vec::new();
-        
-        // First, iterate through required weapons
-        for weapon in &self.1.weapons {
-            // Base loadout with just a weapon
-            loadouts.push(vec![weapon]);
-            
-            // Optional armor combinations
-            for armor in &self.1.armor {
-                loadouts.push(vec![weapon, armor]);
-                
-                // Now handle ring combinations
-                // Use combinations instead of permutations to avoid duplicates
-                for ring in &self.1.rings {
-                    loadouts.push(vec![weapon, armor, ring]);
-                }
-                
-                // For two rings, we need to ensure we don't pick the same ring twice
-                for (i, ring1) in self.1.rings.iter().enumerate() {
-                    for ring2 in self.1.rings.iter().skip(i + 1) {  // skip(i + 1) ensures we don't reuse rings
-                        loadouts.push(vec![weapon, armor, ring1, ring2]);
-                    }
-                }
-            }
-            
-            // Handle rings without armor
-            for ring in &self.1.rings {
-                loadouts.push(vec![weapon, ring]);
-            }
-            
-            // Two rings without armor
-            for (i, ring1) in self.1.rings.iter().enumerate() {
-                for ring2 in self.1.rings.iter().skip(i + 1) {
-                    loadouts.push(vec![weapon, ring1, ring2]);
-                }
-            }
-        }
-        
-        loadouts
-    }
-
-    fn calculate_loadout_stats(&self, loadout: &[&Item]) -> Stats {
-        let mut stats = self.0.clone(); // Start with base player stats
-        
-        // Add up all damage and armor from equipment
-        for item in loadout {
-            stats.damage += item.damage;
-            stats.armor += item.armor;
-        }
-        
-        stats
-    }
-
-    fn simulate_battle(&self, player_stats: Stats, boss_stats: Stats) -> bool {
-        // BUGFIX: Use saturating_sub to prevent underflow
-        let player_damage = (player_stats.damage.saturating_sub(boss_stats.armor)).max(1);
-        let boss_damage = (boss_stats.damage.saturating_sub(player_stats.armor)).max(1);
-                
-        // Calculate turns needed to win using ceiling division
-        let turns_to_kill_boss = (boss_stats.hp + player_damage - 1) / player_damage;
-        let turns_to_kill_player = (player_stats.hp + boss_damage - 1) / boss_damage;
-                
-        turns_to_kill_boss <= turns_to_kill_player
-    }
-
+impl Stats {
     fn parse_stat(input: &str) -> IResult<&str, (&str, u32)> {
         let (input, (key, _, _, number)) = tuple((
             // Parse the key (e.g. "Hit Points")
@@ -180,6 +70,132 @@ impl Day {
     
         Ok(stats)
     }
+}
+
+type Player = Stats;
+type Boss = Stats;
+
+#[derive(Debug)]
+struct Item {
+    _name: String,
+    cost: u32,
+    damage: u32,
+    armor: u32,
+}
+
+impl Item {
+    fn new(_name: String, cost: &str, damage: &str, armor: &str) -> Self {
+        Self {
+            _name,
+            cost: cost.parse().expect("a number"),
+            damage: damage.parse().expect("a number"),
+            armor: armor.parse().expect("a number"),
+        }
+    }
+}
+
+type Weapon = Item;
+type Armor = Item;
+type Ring = Item;
+
+/// Shop
+#[derive(Debug)]
+struct Items {
+    weapons: Vec<Weapon>,
+    armor: Vec<Armor>,
+    rings: Vec<Ring>,
+}
+
+impl Items {
+    fn new() -> Self {
+        Self {
+            weapons: vec![],
+            armor: vec![],
+            rings: vec![],
+        }
+    }
+}
+
+#[derive(Debug, derive_more::Deref)]
+struct Day(Items);
+
+impl FromStr for Day {
+    type Err = miette::Error;
+
+    fn from_str(input: &str) -> miette::Result<Self> {
+        let items = Day::parse_items(input)?;
+
+        Ok(Day(items))
+    }
+}
+
+impl Day {
+    fn generate_loadouts(&self) -> Vec<Vec<&Item>> {
+        let mut loadouts = Vec::new();
+        
+        // First, iterate through required weapons
+        for weapon in &self.weapons {
+            // Base loadout with just a weapon
+            loadouts.push(vec![weapon]);
+            
+            // Optional armor combinations
+            for armor in &self.armor {
+                loadouts.push(vec![weapon, armor]);
+                
+                // Now handle ring combinations
+                // Use combinations instead of permutations to avoid duplicates
+                for ring in &self.rings {
+                    loadouts.push(vec![weapon, armor, ring]);
+                }
+                
+                // For two rings, we need to ensure we don't pick the same ring twice
+                for (i, ring1) in self.rings.iter().enumerate() {
+                    for ring2 in self.rings.iter().skip(i + 1) {  // skip(i + 1) ensures we don't reuse rings
+                        loadouts.push(vec![weapon, armor, ring1, ring2]);
+                    }
+                }
+            }
+            
+            // Handle rings without armor
+            for ring in &self.rings {
+                loadouts.push(vec![weapon, ring]);
+            }
+            
+            // Two rings without armor
+            for (i, ring1) in self.rings.iter().enumerate() {
+                for ring2 in self.rings.iter().skip(i + 1) {
+                    loadouts.push(vec![weapon, ring1, ring2]);
+                }
+            }
+        }
+        
+        loadouts
+    }
+
+    fn calculate_loadout_stats(loadout: &[&Item]) -> Stats {
+        let mut stats = Player::default();
+        
+        // Add up all damage and armor from equipment
+        for item in loadout {
+            stats.damage += item.damage;
+            stats.armor += item.armor;
+        }
+        
+        stats
+    }
+
+    fn simulate_battle(&self, player_stats: Stats, boss_stats: Stats) -> bool {
+        // BUGFIX: Use saturating_sub to prevent underflow
+        let player_damage = (player_stats.damage.saturating_sub(boss_stats.armor)).max(1);
+        let boss_damage = (boss_stats.damage.saturating_sub(player_stats.armor)).max(1);
+                
+        // Calculate turns needed to win using ceiling division
+        let turns_to_kill_boss = (boss_stats.hp + player_damage - 1) / player_damage;
+        let turns_to_kill_player = (player_stats.hp + boss_damage - 1) / boss_damage;
+                
+        turns_to_kill_boss <= turns_to_kill_player
+    }
+
 
     fn parse_items(input: &str) -> miette::Result<Items> {
         let mut shop = Items::new();
@@ -204,7 +220,6 @@ impl Day {
     }
 
     fn section(input: &str) -> IResult<&str, (String, Vec<Item>)> {
-
         let (input, (section_name, _)) = tuple((
             terminated(take_until(":"), tag(":")),
             multispace0,
@@ -257,8 +272,53 @@ impl Day {
         preceded(char('+'), digit1)(input)
     }
 
-    fn initialize(&mut self) -> miette::Result<()> {
-        let input = "Weapons:    Cost  Damage  Armor
+}
+
+impl Solution for Day {
+    type Output = u32;
+
+    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
+        // let player = Player::default();
+        let boss = Boss::from_str(include_str!("../inputs/2015-12-21.txt")).expect("Failed to parse boss stats");
+        let combos = self.generate_loadouts();
+
+        let winning_costs = combos.iter()
+            .filter_map(|combo| {
+                let stats = Self::calculate_loadout_stats(combo);
+                if self.simulate_battle(stats, boss) {
+                    Some(combo.iter().map(|item| item.cost).sum())
+                } else {
+                    None
+                }
+            })
+            .min() // Get the lowest cost among winning combinations
+            .ok_or_else(|| miette::miette!("No winning combinations found"))?;
+
+        Ok(winning_costs)
+    }
+
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+        // let player = Player::default();
+        let boss = Boss::from_str(include_str!("../inputs/2015-12-21.txt")).expect("Failed to parse boss stats");
+
+        let losing_costs = self.generate_loadouts().iter()
+            .filter_map(|combo| {
+                let stats = Self::calculate_loadout_stats(combo);
+                if !self.simulate_battle(stats, boss) {
+                    Some(combo.iter().map(|item| item.cost).sum())
+                } else {
+                    None
+                }
+            })
+            .max() // Get the highest cost among losing combinations
+            .ok_or_else(|| miette::miette!("No losing combinations found"))?;
+
+        Ok(losing_costs)
+    }
+}
+
+fn main() -> miette::Result<()> {
+    let mut day = Day::from_str("Weapons:    Cost  Damage  Armor
 Dagger        8     4       0
 Shortsword   10     5       0
 Warhammer    25     6       0
@@ -278,57 +338,7 @@ Damage +2    50     2       0
 Damage +3   100     3       0
 Defense +1   20     0       1
 Defense +2   40     0       2
-Defense +3   80     0       3";
-
-        self.1 = Day::parse_items(input)?;
-
-        Ok(())
-    }
-}
-
-impl Solution for Day {
-    type Output = u32;
-
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        self.initialize().expect("not ok");
-        let combos = self.generate_loadouts();
-
-        let winning_costs = combos.iter()
-            .filter_map(|combo| {
-                let stats = self.calculate_loadout_stats(combo);
-                if self.simulate_battle(stats, self.2) {
-                    Some(combo.iter().map(|item| item.cost).sum())
-                } else {
-                    None
-                }
-            })
-            .min() // Get the lowest cost among winning combinations
-            .ok_or_else(|| miette::miette!("No winning combinations found"))?;
-
-        Ok(winning_costs)
-    }
-
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        self.initialize().expect("ok");
-
-        let losing_costs = self.generate_loadouts().iter()
-            .filter_map(|combo| {
-                let stats = self.calculate_loadout_stats(combo);
-                if !self.simulate_battle(stats, self.2) {
-                    Some(combo.iter().map(|item| item.cost).sum())
-                } else {
-                    None
-                }
-            })
-            .max() // Get the highest cost among losing combinations
-            .ok_or_else(|| miette::miette!("No losing combinations found"))?;
-
-        Ok(losing_costs)
-    }
-}
-
-fn main() -> miette::Result<()> {
-    let mut day = Day::from_str(include_str!("./inputs/2015-12-21.txt"))?;
+Defense +3   80     0       3")?;
     let part1 = day.solve(Part::One)?;
     let part2 = day.solve(Part::Two)?;
 
