@@ -1,3 +1,4 @@
+use std::hash::Hash;
 use std::collections::HashMap;
 
 pub trait Machine {
@@ -11,15 +12,21 @@ pub trait Machine {
 }
 
 #[derive(Debug)]
-pub struct VirtualMachine<I, T: Copy> {
-    registers: HashMap<char, T>,
+pub struct VirtualMachine<I, K, T: Clone> 
+where 
+    K: Hash + Eq + Into<String>, 
+{
+    pub registers: HashMap<K, T>,
     pub instructions: Vec<I>,
     /// Instruction Pointer
     _ip: usize,
 }
 
-impl<I, T: Copy> VirtualMachine<I, T> {
-    pub fn new(registers: HashMap<char, T>, instructions: Vec<I>) -> Self {
+impl<I, K, T: Clone> VirtualMachine<I, K, T> 
+where 
+    K: Hash + Eq + Into<String>,
+{
+    pub fn new(registers: HashMap<K, T>, instructions: Vec<I>) -> Self {
         Self {
             registers,
             instructions,
@@ -27,11 +34,11 @@ impl<I, T: Copy> VirtualMachine<I, T> {
         }
     }
 
-    pub fn get_register(&self, reg: &char) -> T {
-        *self.registers.get(reg).unwrap()
+    pub fn get_register(&self, reg: &K) -> T {
+        self.registers.get(reg).unwrap().clone()
     }
 
-    pub fn set_register(&mut self, reg: char, value: T) {
+    pub fn set_register(&mut self, reg: K, value: T) {
         self.registers.insert(reg, value);
     }
 }

@@ -6,7 +6,7 @@ use aoc_ornaments::{intcode::VirtualMachine, nom::split_newlines, Part, Solution
 use nom::{branch::alt, bytes::complete::tag, character::complete::{alpha1, digit1, space0, space1}, sequence::tuple, IResult};
 
 #[derive(Debug, derive_more::Deref, derive_more::DerefMut)]
-struct Day(VirtualMachine<Instruction, i32>);
+struct Day(VirtualMachine<Instruction, char, i32>);
 
 #[derive(Debug, Clone, Copy)]
 enum Instruction {
@@ -22,6 +22,18 @@ enum Instruction {
     JumpIfEven(char, i32),
     /// jio r, offset is like jmp, but only jumps if register r is 1 ("jump if one", not odd).
     JumpIfOne(char, i32),
+}
+
+impl FromStr for Instruction {
+    type Err = miette::Error;
+
+    /// Parse a list of instructions from a string
+    fn from_str(input: &str) -> miette::Result<Self> {
+        let (_, instruction) = Instruction::parse_instruction(input)
+            .map_err(|e| miette::miette!(e.to_owned()))?;
+
+        Ok(instruction)
+    }
 }
 
 impl Instruction {
@@ -63,18 +75,6 @@ impl Instruction {
             },
             _ => unimplemented!("invalid instruction"),
         }
-    }
-}
-
-impl FromStr for Instruction {
-    type Err = miette::Error;
-
-    /// Parse a list of instructions from a string
-    fn from_str(input: &str) -> miette::Result<Self> {
-        let (_, instruction) = Instruction::parse_instruction(input)
-            .map_err(|e| miette::miette!(e.to_owned()))?;
-
-        Ok(instruction)
     }
 }
 
