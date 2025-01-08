@@ -5,15 +5,8 @@ use std::str::FromStr;
 use aoc_ornaments::{Part, Solution};
 use itertools::Itertools;
 
+#[derive(Debug, derive_more::Deref)]
 struct Day(Vec<u32>);
-
-impl std::ops::Deref for Day {
-    type Target = Vec<u32>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 impl FromStr for Day {
     type Err = miette::Error;
@@ -24,7 +17,7 @@ impl FromStr for Day {
 }
 
 impl Day {
-    fn compute() {
+    fn _compute() {
         todo!();
     }
 }
@@ -35,8 +28,9 @@ impl Solution for Day {
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
         Ok((1..=self.len())
             .flat_map(|container_size| {
-                self.iter().combinations(container_size)
-                .filter(|combo| combo.iter().copied().sum::<u32>() == 150)
+                self.iter()
+                    .combinations(container_size)
+                    .filter(|combo| combo.iter().copied().sum::<u32>() == 150)
             }).count())
     }
 
@@ -64,7 +58,7 @@ impl Solution for Day {
 }
 
 fn main() -> miette::Result<()> {
-    let mut day = Day::from_str(include_str!("./inputs/2015-12-17.txt"))?;
+    let mut day = Day::from_str(include_str!("../inputs/2015-12-17.txt"))?;
     let part1 = day.solve(Part::One)?;
     let part2 = day.solve(Part::Two)?;
 

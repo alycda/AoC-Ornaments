@@ -213,16 +213,8 @@ impl PartialEq<Sue> for SueBuilder {
 }
 
 /// a vec because we know the input is already sorted
-#[derive(Debug)]
+#[derive(Debug, derive_more::Deref)]
 struct Day(Vec<SueBuilder>);
-
-impl std::ops::Deref for Day {
-    type Target = Vec<SueBuilder>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 impl FromStr for Day {
     type Err = miette::Error;
@@ -278,8 +270,6 @@ trees: 3
 cars: 2
 perfumes: 1").expect("ok");
 
-        // dbg!(&aunt_sue);
-
         let sue = self.iter().position(|sue| {
             sue == &aunt_sue
         }).expect("not found"); //.ok_or_else(|| miette::MietteError::from("no solution"));
@@ -298,8 +288,6 @@ goldfish: 5
 trees: 3
 cars: 2
 perfumes: 1").expect("ok");
-    
-        // dbg!(&aunt_sue);
 
         let sue = self.iter().position(|sue| {
             aunt_sue == *sue
@@ -310,7 +298,7 @@ perfumes: 1").expect("ok");
 }
 
 fn main() -> miette::Result<()> {
-    let mut day = Day::from_str(include_str!("./inputs/2015-12-16.txt"))?;
+    let mut day = Day::from_str(include_str!("../inputs/2015-12-16.txt"))?;
     let part1 = day.solve(Part::One)?;
     let part2 = day.solve(Part::Two)?;
 

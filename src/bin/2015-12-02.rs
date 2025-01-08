@@ -13,18 +13,6 @@ fn number(input: &str) -> IResult<&str, u32> {
     map_res(digit1, str::parse)(input)
 }
 
-// Parse the full dimensions pattern
-// fn dimensions(input: &str) -> IResult<&str, (u32, u32, u32)> {
-//     tuple((
-//         number,
-//         char('x'),
-//         number,
-//         char('x'),
-//         number,
-//     ))(input)
-//     .map(|(next_input, (l, _, w, _, h))| (next_input, (l, w, h)))
-// }
-
 fn dimensions(input: &str) -> IResult<&str, (u32, u32, u32)> {
     let (input, nums) = separated_list1(char('x'), number)(input)?;
     match nums.as_slice() {
@@ -111,7 +99,7 @@ impl FromStr for Day {
 }
 
 fn main() -> miette::Result<()> {
-    let mut day = Day::from_str(include_str!("./inputs/2015-12-02.txt"))?;
+    let mut day = Day::from_str(include_str!("../inputs/2015-12-02.txt"))?;
     let part1 = day.solve(Part::One)?;
     let part2 = day.solve(Part::Two)?;
 

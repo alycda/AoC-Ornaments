@@ -86,7 +86,7 @@ impl ToString for Day {
 }
 
 fn main() -> miette::Result<()> {
-    let mut day = Day::from_str(include_str!("./inputs/2015-12-10.txt"))?;
+    let mut day = Day::from_str(include_str!("../inputs/2015-12-10.txt"))?;
     let part1 = day.solve(Part::One)?;
     let part2 = day.solve(Part::Two)?;
 
