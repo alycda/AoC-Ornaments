@@ -1,18 +1,14 @@
 //! Day 23: Opening the Turing Lock
 
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
-use aoc_ornaments::{nom::split_newlines, Part, Solution};
+use aoc_ornaments::{intcode::VirtualMachine, nom::split_newlines, Part, Solution};
 use nom::{branch::alt, bytes::complete::tag, character::complete::{alpha1, digit1, space0, space1}, sequence::tuple, IResult};
 
-#[derive(Debug)]
-struct Day {
-    register_a: i32,
-    register_b: i32,
-    instructions: Vec<Instruction>,
-}
+#[derive(Debug, derive_more::Deref, derive_more::DerefMut)]
+struct Day(VirtualMachine<Instruction, i32>);
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 enum Instruction {
     /// hlf r sets register r to half its current value, then continues with the next instruction.
     Half(char),
@@ -65,7 +61,7 @@ impl Instruction {
                 let (input, offset) = Self::parse_number(input)?;
                 Ok((input, Self::JumpIfOne(register.chars().next().unwrap(), offset)))
             },
-            _ => todo!(),
+            _ => unimplemented!("invalid instruction"),
         }
     }
 }
@@ -73,6 +69,7 @@ impl Instruction {
 impl FromStr for Instruction {
     type Err = miette::Error;
 
+    /// Parse a list of instructions from a string
     fn from_str(input: &str) -> miette::Result<Self> {
         let (_, instruction) = Instruction::parse_instruction(input)
             .map_err(|e| miette::miette!(e.to_owned()))?;
@@ -97,58 +94,45 @@ impl FromStr for Day {
 
 impl Day {
     fn new(instructions: Vec<Instruction>) -> Self {
-        Self {
-            register_a: 0,
-            register_b: 0,
-            instructions,
-        }
-    }
+        let mut registers = HashMap::new();
+        registers.insert('a', 0);
+        registers.insert('b', 0);
 
-    fn get_register(&self, register: char) -> i32 {
-        match register {
-            'a' => self.register_a,
-            'b' => self.register_b,
-            _ => panic!("Invalid register"),
-        }
-    }
-
-    fn set_register(&mut self, register: char, value: i32) {
-        match register {
-            'a' => self.register_a = value,
-            'b' => self.register_b = value,
-            _ => panic!("Invalid register"),
-        }
+        Self(VirtualMachine::new(registers, instructions))
     }
 
     fn execute(&mut self) {
-        let mut ip = 0;  // instruction pointer
+        let mut ip = 0;
         
         while ip < self.instructions.len() {
-            let instruction = &self.instructions[ip];
+            let instruction = &self.instructions[ip].clone();
             
             // Default is to move to next instruction
             let mut next_ip = ip + 1;
     
             match instruction {
                 Instruction::Half(reg) => {
-                    self.set_register(*reg, self.get_register(*reg) / 2);
+                    let value = self.get_register(reg);
+                    self.set_register(*reg, value / 2);
                 }
                 Instruction::Triple(reg) => {
-                    self.set_register(*reg, self.get_register(*reg) * 3);
+                    let value = self.get_register(reg);
+                    self.set_register(*reg, value * 3);
                 }
                 Instruction::Increment(reg) => {
-                    self.set_register(*reg, self.get_register(*reg) + 1);
+                    let value = self.get_register(reg);
+                    self.set_register(*reg, value + 1);
                 }
                 Instruction::Jump(offset) => {
                     next_ip = (ip as i32 + offset) as usize;
                 }
                 Instruction::JumpIfEven(reg, offset) => {
-                    if self.get_register(*reg) % 2 == 0 {
+                    if self.get_register(reg) % 2 == 0 {
                         next_ip = ip + *offset as usize;
                     }
                 }
                 Instruction::JumpIfOne(reg, offset) => {
-                    if self.get_register(*reg) == 1 {
+                    if self.get_register(reg) == 1 {
                         next_ip = ip + *offset as usize;
                     }
                 }
@@ -162,20 +146,23 @@ impl Day {
 impl Solution for Day {
     type Output = i32;
 
+    /// What is the value in register b when the program is finished executing?
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
         self.execute();
 
-        Ok(self.register_b)
+        Ok(self.get_register(&'b'))
     }
 
+    /// What is the value in register b after the program has run for a while with register a set to 1?
     fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        self.register_a = 1;
+        self.set_register('a', 1);
         self.execute();
 
-        Ok(self.register_b)
+        Ok(self.get_register(&'b'))
     }
 }
 
+/// Run Part 1 and Part 2. Reset the state after Part 1.
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("../inputs/2015-12-23.txt"))?;
     let part1 = day.solve(Part::One)?;
@@ -201,7 +188,7 @@ tpl a
 inc a")?;
         day.execute();
 
-        assert_eq!(day.register_a, 2);
+        assert_eq!(day.get_register(&'a'), 2);
 
         Ok(())
     }
