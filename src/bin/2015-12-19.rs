@@ -12,7 +12,6 @@ type Replacements = Vec<String>;
 struct Day(HashMap<Molecule, Replacements>, Molecule);
 
 impl std::ops::Deref for Day {
-    // type Target = Uniqued;
     type Target = HashMap<Molecule, Replacements>;
 
     fn deref(&self) -> &Self::Target {
@@ -111,8 +110,9 @@ impl Day {
         
         // Count total atoms (each uppercase + following lowercase is one atom)
         let atom_count = molecule.chars()
-            .enumerate()
-            .filter(|(i, c)| {
+            // .enumerate()
+            // .filter(|(i, c)| {
+            .filter(|c| {
                 if !c.is_ascii_uppercase() {
                     return false;
                 }
@@ -135,17 +135,20 @@ impl Day {
 impl Solution for Day {
     type Output = usize;
 
+    /// Find all possible molecules that can be generated from the input molecule.
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
         Ok(self.generate_molecules().len())
     }
 
+    /// Count the number of steps required to go from the input molecule to the target molecule.
     fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
         Ok(self.count_steps())
     }
 }
 
+/// Run Part 1 and Part 2.
 fn main() -> miette::Result<()> {
-    let mut day = Day::from_str(include_str!("./inputs/2015-12-19.txt"))?;
+    let mut day = Day::from_str(include_str!("../inputs/2015-12-19.txt"))?;
     let part1 = day.solve(Part::One)?;
     let part2 = day.solve(Part::Two)?;
 
@@ -165,31 +168,32 @@ mod tests {
     #[case("HOH", 4)]
     #[case("HOHOHO", 7)]
     fn test_part1(#[case] input: &str, #[case] expected: usize) {
-        let input = "H => HO
+        let replacements = "H => HO
 H => OH
 O => HH";
-        // let mut day = Day::from_str(input).unwrap();
-        // let result = day.solve(Part::One).unwrap();
 
-        // assert_eq!(result, expected.to_string());
+        let (_, molecules) = Day::parse_molecules(replacements).unwrap();
+        // let generated = Day::from((molecules, input)).generate_molecules();
+        let mut day = Day::from((molecules, input));
+        let result = day.solve(Part::One).unwrap();
 
-        todo!()
+        assert_eq!(result, expected.to_string());
     }
 
     #[rstest]
     #[case("HOH", 3)]
     #[case("HOHOHO", 6)]
     fn test_part2(#[case] input: &str, #[case] expected: usize) {
-        let input = "e => H
+        let replacements = "e => H
 e => O
 H => HO
 H => OH
 O => HH";
-        // let mut day = Day::from_str(input).unwrap();
-        // let result = day.solve(Part::Two).unwrap();
 
-        // assert_eq!(result, expected.to_string());
+        let (_, molecules) = Day::parse_molecules(replacements).unwrap();
+        let mut day = Day::from((molecules, input));
+        let result = day.solve(Part::Two).unwrap();
 
-        todo!()
+        assert_eq!(result, (expected - 1).to_string());
     }
 }

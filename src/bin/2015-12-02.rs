@@ -106,7 +106,7 @@ mod tests {
     #[rstest]
     #[case("2x3x4", 58)]
     #[case("1x1x10", 43)]
-    fn test_cases_part1(#[case] input: &str, #[case] expected: u32) -> miette::Result<()> {
+    fn test_day2_part1(#[case] input: &str, #[case] expected: u32) -> miette::Result<()> {
         assert_eq!(Day::dimensions(Day::parse_dimensions(input).unwrap().1), expected);
 
         Ok(())
@@ -115,7 +115,7 @@ mod tests {
     #[rstest]
     #[case("2x3x4", 34)]
     #[case("1x1x10", 14)]
-    fn test_cases_part2(#[case] input: &str, #[case] expected: u32) -> miette::Result<()> {
+    fn test_day2_part2(#[case] input: &str, #[case] expected: u32) -> miette::Result<()> {
         assert_eq!(Day::ribbon(Day::parse_dimensions(input).unwrap().1), expected);
 
         Ok(())

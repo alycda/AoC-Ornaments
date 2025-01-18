@@ -1,18 +1,18 @@
 use std::str::FromStr;
 
 pub mod bits;
-pub mod linear;
 pub mod intcode;
+pub mod linear;
 pub mod nom;
 pub mod scoring;
 pub mod spatial;
 
 /// Shared behavior amongst AOC/Everybody.codes solutions
-/// 
+///
 /// [FromStr] is a supertrait because we ALWAYS have to parse string input
 pub trait Solution: FromStr {
     /// Ensures the output can be converted to a string
-    type Output: std::fmt::Display + Default;  
+    type Output: std::fmt::Display + Default;
 
     /// Required for AoC
     fn part1(&mut self) -> SolutionResult<<Self as Solution>::Output> {
@@ -99,7 +99,9 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Part 3 is not implemented but available if needed (everbody.codes, or aoc community bonus")]
+    #[should_panic(
+        expected = "Part 3 is not implemented but available if needed (everbody.codes, or aoc community bonus"
+    )]
     fn test_part_3() {
         let mut day = Day;
 

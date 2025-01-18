@@ -24,7 +24,7 @@ impl Not for Part1 {
 #[derive(Debug, derive_more::Deref, Clone, Copy, PartialEq)]
 pub struct Part2(u32);
 
-#[derive(Debug)]
+#[derive(Debug, derive_more::Deref)]
 struct Day<P>(Grid<P>);
 
 impl FromStr for Day<Part1> {
@@ -118,6 +118,7 @@ impl FromStr for Day<Part2> {
 impl Solution for Day<Part1> {
     type Output = usize;
 
+    /// After following the instructions, how many lights are lit?
     ///
     /// Option 1: Explicitly deref using *
     /// `Ok(self.iter().filter(|&&b| *b).count())`
@@ -151,6 +152,7 @@ impl Solution for Day<Part2> {
         unimplemented!("Part 1")
     }
 
+    /// What is the total brightness of all lights combined after following Santa's instructions?
     fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         let mut total = 0;
 
@@ -162,6 +164,7 @@ impl Solution for Day<Part2> {
     }
 }
 
+/// Run Part 1 and Part 2.
 fn main() -> miette::Result<()> {
     let input = include_str!("./inputs/2015-12-06.txt");
     let mut day_part1 = Day::<Part1>::from_str(input)?;

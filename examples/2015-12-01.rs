@@ -87,7 +87,7 @@ mod tests {
     #[case("))(", -1)]
     #[case(")))", -3)]
     #[case(")())())", -3)]
-    fn test_cases_part1(#[case] input: &str, #[case] expected: i32) -> miette::Result<()> {
+    fn test_day1_part1(#[case] input: &str, #[case] expected: i32) -> miette::Result<()> {
         let mut day = Day::from_str(input)?;
         assert_eq!(day.solve(Part::One)?, expected.to_string());
 
@@ -97,7 +97,7 @@ mod tests {
     #[rstest]
     #[case(")", 1)]
     #[case("()())", 5)]
-    fn test_cases_part2(#[case] input: &str, #[case] expected: i32) -> miette::Result<()> {
+    fn test_day1_part2(#[case] input: &str, #[case] expected: i32) -> miette::Result<()> {
         let mut day = Day::from_str(input)?;
         assert_eq!(day.solve(Part::Two)?, expected.to_string());
 

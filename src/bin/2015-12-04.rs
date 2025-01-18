@@ -21,13 +21,13 @@ impl Day {
         md5::compute(input).0
     }
     
+    /// First two bytes must be 0
     fn has_five_leading_zeros(hash: &[u8; 16]) -> bool {
-        // First two bytes must be 0
         hash[0] == 0 && hash[1] == 0 && (hash[2] & 0xf0) == 0
     }
     
+    /// First three bytes must be 0
     fn has_six_leading_zeros(hash: &[u8; 16]) -> bool {
-        // First three bytes must be 0
         hash[0] == 0 && hash[1] == 0 && hash[2] == 0
     }
 
@@ -39,15 +39,18 @@ impl Day {
 impl Solution for Day {
     type Output = u32;
 
+    /// Find the lowest positive number that, when combined with the input string, produces an MD5 hash with five leading zeros.
     fn part1(&mut self) -> miette::Result<Self::Output> {
         self.compute(Self::has_five_leading_zeros).ok_or_else(|| miette::miette!("No solution found"))
     }
 
+    /// Find the lowest positive number that, when combined with the input string, produces an MD5 hash with six leading zeros.
     fn part2(&mut self) -> miette::Result<Self::Output> {
         self.compute(Self::has_six_leading_zeros).ok_or_else(|| miette::miette!("No solution found"))
     }
 }
 
+/// Run Part 1 and Part 2.
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("../inputs/2015-12-04.txt"))?;
     let part1 = day.solve(Part::One)?;
