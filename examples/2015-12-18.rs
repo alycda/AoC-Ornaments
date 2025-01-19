@@ -2,7 +2,7 @@
 
 use std::str::FromStr;
 
-use aoc_ornaments::{spatial::{Grid, Position}, Part, Solution};
+use aoc_ornaments::{spatial::{Grid, Position}, Part, ArgSolution};
 
 #[derive(Debug, derive_more::Deref, derive_more::DerefMut)]
 struct Day(Grid<bool>);
@@ -49,21 +49,38 @@ impl Day {
     fn sum(&self) -> usize {
         self.iter().map(|row| row.iter().filter(|&&b| b).count()).sum()
     }
+
+    /// used for debugging
+    #[allow(dead_code)]
+    fn print(&self) {
+        for row in self.iter() {
+            for &light in row {
+                print!("{}", if light { '#' } else { '.' });
+            }
+            println!();
+        }
+    }
+
+    /// used for debugging
+    #[allow(dead_code)]
+    fn to_string(&self) -> String {
+        self.iter().map(|row| row.iter().map(|&b| if b { '#' } else { '.' }).collect::<String>()).collect::<Vec<String>>().join("\n")
+    }
 }
 
-impl Solution for Day {
+impl ArgSolution<usize> for Day {
     type Output = usize;
 
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        self.step(100);
+    fn part1(&mut self, count: usize) -> aoc_ornaments::SolutionResult<Self::Output> {
+        self.step(count);
 
         Ok(self.sum())
     }
 
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part2(&mut self, count: usize) -> aoc_ornaments::SolutionResult<Self::Output> {
         self.always_on();
 
-        for _ in 0..100 {
+        for _ in 0..count {
             let mut next = Grid(self.clone());
 
             self.walk(|pos| {
@@ -88,10 +105,10 @@ impl Solution for Day {
 
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("./inputs/2015-12-18.txt"))?;
-    let part1 = day.solve(Part::One)?;
+    let part1 = day.solve(Part::One, 100)?;
     // state is dirty after part1, need to reset
     let mut day = Day::from_str(include_str!("./inputs/2015-12-18.txt"))?;
-    let part2 = day.solve(Part::Two)?;
+    let part2 = day.solve(Part::Two, 100)?;
 
     println!("Part 1: {}", part1);
     println!("Part 2: {}", part2);
@@ -136,10 +153,17 @@ mod tests {
 ..##..
 ......
 ......", 4)]
-    fn test_steps_part1(#[case] input: &str, #[case] steps: usize) {
-        // Day::step(4);
+    fn test_steps_part1(#[case] expected: &str, #[case] steps: usize) {
+        let mut day = Day::from_str(".#.#.#
+...##.
+#....#
+..#...
+#.#..#
+####..").unwrap();
+        day.step(steps);
+        // day.print();
 
-        todo!();
+        assert_eq!(expected, day.to_string());
     }
 
     #[test]
@@ -152,8 +176,7 @@ mod tests {
 ####..";
 
         let mut day = Day::from_str(input).unwrap();
-        // todo: 4 steps
-        let result = day.solve(Part::One).unwrap();
+        let result = day.solve(Part::One, 4).unwrap();
 
         assert_eq!(result, "4");
     }
@@ -195,10 +218,16 @@ mod tests {
 .##...
 #.#...
 ##...#", 5)]
-    fn test_steps_part2(#[case] input: &str, #[case] steps: usize) {
-        // Day::step(5);
+    fn test_steps_part2(#[case] expected: &str, #[case] steps: usize) {
+        let mut day = Day::from_str("##.#.#
+...##.
+#....#
+..#...
+#.#..#
+####.#").unwrap();
+        day.solve(Part::Two, steps).unwrap();
 
-        todo!();
+        assert_eq!(expected, day.to_string());
     }
 
     #[test]
@@ -211,8 +240,7 @@ mod tests {
 ####.#";
 
         let mut day = Day::from_str(input).unwrap();
-        // todo: 5 steps
-        let result = day.solve(Part::One).unwrap();
+        let result = day.solve(Part::Two, 5).unwrap();
 
         assert_eq!(result, "17");
     }

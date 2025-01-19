@@ -38,6 +38,35 @@ pub trait Solution: FromStr {
     }
 }
 
+/// accepts a signle argument, which may be a tuple
+pub trait ArgSolution<A>: FromStr {
+    /// Ensures the output can be converted to a string
+    type Output: std::fmt::Display + Default;
+
+    /// Required for AoC
+    fn part1(&mut self, _args: A) -> SolutionResult<Self::Output> {
+        todo!()
+    }
+
+    /// Required for AoC
+    fn part2(&mut self, _args: A) -> SolutionResult<Self::Output> {
+        todo!()
+    }
+
+    /// Optional, for everybody.codes or bonus AoC
+    fn part3(&mut self, _args: A) -> SolutionResult<Self::Output> {
+        Ok(Self::Output::default())
+    }
+
+    fn solve(&mut self, which: Part, args: A) -> SolutionResult<String> {
+        Ok(match which {
+            Part::One => ArgSolution::part1(self, args)?.to_string(),
+            Part::Two => ArgSolution::part2(self, args)?.to_string(),
+            Part::Three => ArgSolution::part3(self, args)?.to_string(),
+        })
+    }
+}
+
 /// Puzzle parts
 #[derive(Debug, Clone, Copy)]
 pub enum Part {

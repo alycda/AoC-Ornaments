@@ -110,8 +110,6 @@ impl Day {
         
         // Count total atoms (each uppercase + following lowercase is one atom)
         let atom_count = molecule.chars()
-            // .enumerate()
-            // .filter(|(i, c)| {
             .filter(|c| {
                 if !c.is_ascii_uppercase() {
                     return false;

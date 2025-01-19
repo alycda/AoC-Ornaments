@@ -113,12 +113,8 @@ impl<J> Day<J> {
 impl<J> Solution for Day<J> where Day<J>: FromStr {
     type Output = i64;
 
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        Ok(self.iter().sum())
-    }
-
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        Ok(self.iter().sum())
+    fn solve(&mut self, _part: Part) -> aoc_ornaments::SolutionResult<String> {
+        Ok(self.iter().sum::<Self::Output>().to_string())
     }
 }
 
