@@ -2,7 +2,7 @@
 
 use std::str::FromStr;
 
-use aoc_ornaments::{Part, Solution};
+use aoc_ornaments::{Part, ArgSolution};
 use itertools::Itertools;
 
 /// char, count
@@ -57,7 +57,6 @@ impl Day {
         Self(result)
     }
 
-    /// off by one because the first iteration is handled in parse
     fn compute(&self, count: usize) -> usize {
         let mut current = Day(self.to_vec());
         for _ in 0..count {
@@ -67,15 +66,12 @@ impl Day {
     }
 }
 
-impl Solution for Day {
+impl ArgSolution<usize> for Day {
     type Output = usize;
 
-    fn part1(&mut self) -> miette::Result<Self::Output> {
-        Ok(self.compute(39))
-    }
-
-    fn part2(&mut self) -> miette::Result<Self::Output> {
-        Ok(self.compute(49))
+    fn solve(&mut self, _part: Part, count: usize) -> aoc_ornaments::SolutionResult<String> {
+        // off by one because the first iteration is handled in parse
+        Ok(self.compute(count - 1).to_string())
     }
 }
 
@@ -87,8 +83,8 @@ impl ToString for Day {
 
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("../inputs/2015-12-10.txt"))?;
-    let part1 = day.solve(Part::One)?;
-    let part2 = day.solve(Part::Two)?;
+    let part1 = day.solve(Part::One, 40)?;
+    let part2 = day.solve(Part::Two, 50)?;
 
     println!("Part 1: {}", part1);
     println!("Part 2: {}", part2);
@@ -109,7 +105,7 @@ mod tests {
     #[case("1211", 111221)]
     #[case("111221", 312211)]
     fn test_cases_part1(#[case] input: &str, #[case] expected: i32) {
-        let mut day = Day::from_str(input).unwrap();
+        let day = Day::from_str(input).unwrap();
 
         assert_eq!(day.to_string(), expected.to_string());
     }

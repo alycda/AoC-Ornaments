@@ -2,7 +2,7 @@
 
 use std::{collections::HashMap, str::FromStr};
 
-use aoc_ornaments::{Part, Solution};
+use aoc_ornaments::{Part, ArgSolution};
 
 #[derive(Debug)]
 struct ReindeerStats {
@@ -91,20 +91,20 @@ impl Day {
     }
 }
 
-impl Solution for Day {
+impl ArgSolution<u64> for Day {
     type Output = u64;
 
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part1(&mut self, count: Self::Output) -> aoc_ornaments::SolutionResult<Self::Output> {
         Ok(self.iter()
             .map(|(_name, stats)| {
-                let distance = Day::seconds(2503, stats);
+                let distance = Day::seconds(count, stats);
                 distance
             }).max().unwrap())
     }
 
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part2(&mut self, count: Self::Output) -> aoc_ornaments::SolutionResult<Self::Output> {
         let stats: Vec<&ReindeerStats> = self.values().collect();
-        let all_points = Day::points(2503, &stats);
+        let all_points = Day::points(count, &stats);
         
         Ok(*all_points.iter().max().unwrap())
     }
@@ -112,8 +112,8 @@ impl Solution for Day {
 
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("../inputs/2015-12-14.txt"))?;
-    let part1 = day.solve(Part::One)?;
-    let part2 = day.solve(Part::Two)?;
+    let part1 = day.solve(Part::One, 2503)?;
+    let part2 = day.solve(Part::Two, 2503)?;
 
     println!("Part 1: {}", part1);
     println!("Part 2: {}", part2);

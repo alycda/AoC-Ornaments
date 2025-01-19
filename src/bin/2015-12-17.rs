@@ -2,7 +2,7 @@
 
 use std::str::FromStr;
 
-use aoc_ornaments::{Part, Solution};
+use aoc_ornaments::{Part, ArgSolution};
 use itertools::Itertools;
 
 #[derive(Debug, derive_more::Deref)]
@@ -16,31 +16,25 @@ impl FromStr for Day {
     }
 }
 
-impl Day {
-    fn _compute() {
-        todo!();
-    }
-}
-
-impl Solution for Day {
+impl ArgSolution<u32> for Day {
     type Output = usize;
 
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part1(&mut self, count: u32) -> aoc_ornaments::SolutionResult<Self::Output> {
         Ok((1..=self.len())
             .flat_map(|container_size| {
                 self.iter()
                     .combinations(container_size)
-                    .filter(|combo| combo.iter().copied().sum::<u32>() == 150)
+                    .filter(|combo| combo.iter().copied().sum::<u32>() == count)
             }).count())
     }
 
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part2(&mut self, count: u32) -> aoc_ornaments::SolutionResult<Self::Output> {
         let solutions: Vec<_> = (1..=self.len())
             .map(|size| {
                 // For each size, get count of valid combinations
                 self.iter()
                     .combinations(size)
-                    .filter(|combo| combo.iter().copied().sum::<u32>() == 150)
+                    .filter(|combo| combo.iter().copied().sum::<u32>() == count)
                     .count()
             })
             .enumerate()  // Keep track of the size
@@ -59,8 +53,8 @@ impl Solution for Day {
 
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("../inputs/2015-12-17.txt"))?;
-    let part1 = day.solve(Part::One)?;
-    let part2 = day.solve(Part::Two)?;
+    let part1 = day.solve(Part::One, 150)?;
+    let part2 = day.solve(Part::Two, 150)?;
 
     println!("Part 1: {}", part1);
     println!("Part 2: {}", part2);
@@ -68,3 +62,13 @@ fn main() -> miette::Result<()> {
     Ok(())
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn part1() {
+        let mut day = Day::from_str("20\n15\n10\n5\n5").unwrap();
+        assert_eq!(day.solve(Part::One, 25).unwrap(), "4");
+    }
+}

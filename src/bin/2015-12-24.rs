@@ -2,7 +2,7 @@
 
 use std::str::FromStr;
 
-use aoc_ornaments::{Part, Solution};
+use aoc_ornaments::{Part, ArgSolution};
 use itertools::Itertools;
 
 #[derive(Debug, derive_more::Deref)]
@@ -39,22 +39,18 @@ impl Day {
     }
 }
 
-impl Solution for Day {
+impl ArgSolution<usize> for Day {
     type Output = usize;
 
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        self.quantum_entanglement(3)
-    }
-
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        self.quantum_entanglement(4)
+    fn solve(&mut self, _part: Part, count: usize) -> aoc_ornaments::SolutionResult<String> {
+        Ok(self.quantum_entanglement(count)?.to_string())
     }
 }
 
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("../inputs/2015-12-24.txt"))?;
-    let part1 = day.solve(Part::One)?;
-    let part2 = day.solve(Part::Two)?;
+    let part1 = day.solve(Part::One, 3)?;
+    let part2 = day.solve(Part::Two, 4)?;
 
     println!("Part 1: {}", part1);
     println!("Part 2: {}", part2);

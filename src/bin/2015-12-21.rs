@@ -2,7 +2,7 @@
 
 use std::{str::FromStr, vec};
 
-use aoc_ornaments::{Part, Solution, nom::split_newlines};
+use aoc_ornaments::{Part, ArgSolution, nom::split_newlines};
 use nom::{bytes::complete::{tag, take_until}, character::complete::{alpha1, char, digit1, multispace0, not_line_ending, space0, space1}, combinator::opt, multi::separated_list1, sequence::{preceded, terminated, tuple}, IResult};
 
 #[derive(Debug, Clone, Copy)]
@@ -274,12 +274,10 @@ impl Day {
 
 }
 
-impl Solution for Day {
+impl ArgSolution<Stats> for Day {
     type Output = u32;
 
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        // let player = Player::default();
-        let boss = Boss::from_str(include_str!("../inputs/2015-12-21.txt")).expect("Failed to parse boss stats");
+    fn part1(&mut self, boss: Stats) -> aoc_ornaments::SolutionResult<Self::Output> {
         let combos = self.generate_loadouts();
 
         let winning_costs = combos.iter()
@@ -297,9 +295,7 @@ impl Solution for Day {
         Ok(winning_costs)
     }
 
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        // let player = Player::default();
-        let boss = Boss::from_str(include_str!("../inputs/2015-12-21.txt")).expect("Failed to parse boss stats");
+    fn part2(&mut self, boss: Stats) -> aoc_ornaments::SolutionResult<Self::Output> {
 
         let losing_costs = self.generate_loadouts().iter()
             .filter_map(|combo| {
@@ -339,8 +335,10 @@ Damage +3   100     3       0
 Defense +1   20     0       1
 Defense +2   40     0       2
 Defense +3   80     0       3")?;
-    let part1 = day.solve(Part::One)?;
-    let part2 = day.solve(Part::Two)?;
+    let boss = Boss::from_str(include_str!("../inputs/2015-12-21.txt")).expect("Failed to parse boss stats");
+
+    let part1 = day.solve(Part::One, boss)?;
+    let part2 = day.solve(Part::Two, boss)?;
 
     println!("Part 1: {}", part1);
     println!("Part 2: {}", part2);
