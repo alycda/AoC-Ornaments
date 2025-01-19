@@ -140,7 +140,7 @@ impl Solution for Day<Part1> {
         Ok(count)
     }
 
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         unimplemented!("Part 2")
     }
 }
@@ -148,7 +148,7 @@ impl Solution for Day<Part1> {
 impl Solution for Day<Part2> {
     type Output = usize;
 
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         unimplemented!("Part 1")
     }
 

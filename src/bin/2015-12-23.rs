@@ -147,14 +147,14 @@ impl Solution for Day {
     type Output = i32;
 
     /// What is the value in register b when the program is finished executing?
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         self.execute();
 
         Ok(self.get_register(&'b'))
     }
 
     /// What is the value in register b after the program has run for a while with register a set to 1?
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         self.set_register('a', 1);
         self.execute();
 

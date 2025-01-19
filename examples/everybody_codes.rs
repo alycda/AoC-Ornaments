@@ -9,7 +9,7 @@ struct Day;
 impl Solution for Day {
     type Output = String;
 
-    fn part3(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part3(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         todo!()
     }
 }

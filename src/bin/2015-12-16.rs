@@ -258,7 +258,7 @@ impl Day {
 impl Solution for Day {
     type Output = usize;
 
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         let aunt_sue = Sue::from_str("children: 3
 cats: 7
 samoyeds: 2
@@ -277,7 +277,7 @@ perfumes: 1").expect("ok");
         Ok(sue + 1)
     }
 
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         let aunt_sue = Sue::from_str("children: 3
 cats: 7
 samoyeds: 2

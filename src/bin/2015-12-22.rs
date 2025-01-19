@@ -362,12 +362,12 @@ impl Day {
 impl Solution for Day {
     type Output = i32;
 
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         Self::find_least_mana(&self, GameMode::Normal)
             .ok_or_else(|| miette::miette!("No solution found"))
     }
 
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         Self::find_least_mana(&self, GameMode::Hard)
             .ok_or_else(|| miette::miette!("No solution found"))
     }

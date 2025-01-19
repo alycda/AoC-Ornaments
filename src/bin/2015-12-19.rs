@@ -134,12 +134,12 @@ impl Solution for Day {
     type Output = usize;
 
     /// Find all possible molecules that can be generated from the input molecule.
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         Ok(self.generate_molecules().len())
     }
 
     /// Count the number of steps required to go from the input molecule to the target molecule.
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         Ok(self.count_steps())
     }
 }

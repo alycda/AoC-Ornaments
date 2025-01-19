@@ -15,18 +15,18 @@ pub trait Solution: FromStr {
     type Output: std::fmt::Display + Default;
 
     /// Required for AoC
-    fn part1(&mut self) -> SolutionResult<<Self as Solution>::Output> {
+    fn part1(&mut self) -> SolutionResult<Self::Output> {
         todo!()
     }
 
     /// Required for AoC
-    fn part2(&mut self) -> SolutionResult<<Self as Solution>::Output> {
+    fn part2(&mut self) -> SolutionResult<Self::Output> {
         todo!()
     }
 
     /// Optional, for everybody.codes or bonus AoC
-    fn part3(&mut self) -> SolutionResult<<Self as Solution>::Output> {
-        Ok(<Self as Solution>::Output::default())
+    fn part3(&mut self) -> SolutionResult<Self::Output> {
+        Ok(Self::Output::default())
     }
 
     fn solve(&mut self, which: Part) -> SolutionResult<String> {

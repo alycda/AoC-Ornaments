@@ -79,7 +79,7 @@ impl Day {
 impl Solution for Day {
     type Output = usize;
 
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         let mut generator = Self::generate_codes(20151125);
 
         generator

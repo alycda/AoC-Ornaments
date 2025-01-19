@@ -72,12 +72,12 @@ impl Solution for Day {
     type Output = usize;
 
     /// Count the number of nice strings in the input.
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         Ok(self.compute(Day::is_nice))
     }
 
     /// Count the number of nice strings in the input using the new rules.
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         Ok(self.compute(Day::is_nice_v2))
     }
 }

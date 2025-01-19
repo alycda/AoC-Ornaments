@@ -71,12 +71,12 @@ impl<P> Solution for Day<P> where Day<P>: FromStr {
     type Output = usize;
 
     /// Count the number of houses visited by Santa.
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         Ok(self.len())
     }
 
     /// Count the number of houses visited by Santa and the robot.
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         Ok(self.len())
     }
 }

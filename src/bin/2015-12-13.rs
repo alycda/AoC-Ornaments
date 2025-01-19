@@ -77,7 +77,7 @@ impl Day {
 impl Solution for Day {
     type Output = i64;
 
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         let mut people = self.get_unique();
         let mut max_happiness = None;
         let start = people.iter().next().unwrap().clone();
@@ -87,7 +87,7 @@ impl Solution for Day {
         Ok(max_happiness.unwrap())
     }
 
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         let mut people = self.get_unique();
         let mut max_happiness = None;
         let start = "Me";
