@@ -60,9 +60,10 @@ impl Day {
             println!();
         }
     }
+}
 
+impl ToString for Day {
     /// used for debugging
-    #[allow(dead_code)]
     fn to_string(&self) -> String {
         self.iter().map(|row| row.iter().map(|&b| if b { '#' } else { '.' }).collect::<String>()).collect::<Vec<String>>().join("\n")
     }
