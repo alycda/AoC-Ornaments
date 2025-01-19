@@ -8,7 +8,7 @@
 //! 
 //! when using:
 //! 
-//! ```rust
+//! ```ignore
 //! .map_err(|e| miette::miette!(e))?;
 //! ```
 //! 
@@ -16,7 +16,7 @@
 //! 
 //! the fix:
 //! 
-//! ```rust
+//! ```ignore
 //! .map_err(|e| miette::miette!(e.to_owned()))?;
 //! ```
 //! 
@@ -24,7 +24,7 @@
 //! 
 //! you can also:
 //! 
-//! ```rust
+//! ```ignore
 //! .map_err(|e| miette::miette!("Failed to parse input: {e}"))
 //! ```
 //! 

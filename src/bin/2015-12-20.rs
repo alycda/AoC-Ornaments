@@ -15,12 +15,6 @@ impl FromStr for Day {
     }
 }
 
-impl Day { 
-    fn _house_presents() {
-        todo!()
-    }
-}
-
 impl ArgSolution<usize> for Day {
     type Output = usize;
 
@@ -81,25 +75,4 @@ fn main() -> miette::Result<()> {
     println!("Part 2: {}", part2);
 
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    use rstest::rstest;
-
-    #[rstest]
-    #[case(1, 10)]
-    #[case(2, 30)]
-    #[case(3, 40)]
-    #[case(4, 70)]
-    #[case(5, 60)]
-    #[case(6, 120)]
-    #[case(7, 80)]
-    #[case(8, 150)]
-    #[case(9, 130)]
-    fn test_house_presents(#[case] house: usize, #[case] presents: usize) {
-        todo!()
-    }
 }

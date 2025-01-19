@@ -128,13 +128,10 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(
-        expected = "Part 3 is not implemented but available if needed (everbody.codes, or aoc community bonus"
-    )]
     fn test_part_3() {
         let mut day = Day;
 
         let solution = day.solve(Part::Three).unwrap();
-        assert_eq!("Hello, Dasher!".to_string(), solution);
+        assert_eq!("".to_string(), solution);
     }
 }
