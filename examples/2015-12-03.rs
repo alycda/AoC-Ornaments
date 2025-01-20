@@ -1,3 +1,5 @@
+//! Day 3: Perfectly Spherical Houses in a Vacuum
+
 use std::{marker::PhantomData, str::FromStr};
 
 use aoc_ornaments::{spatial::{Direction, Position, UniquePositions}, Part, Solution};
@@ -49,20 +51,17 @@ impl FromStr for Day<Part2> {
         santa_visited.insert(santa_position);
         robot_visited.insert(robot_position);
 
-        input.chars().enumerate().for_each(|(i, c)| {
-            if i % 2 == 0 {
-                santa_position += Direction::parse(c).expect("valid char").to_offset();
-                santa_visited.insert(santa_position);
-            } else {
-                robot_position += Direction::parse(c).expect("valid char").to_offset();
-                robot_visited.insert(robot_position);
-            }
-        });
-
-        // for c in input.chars() {
-        //     position += Direction::parse(c)?.to_offset();
-        //     visited.insert(position);
-        // }
+        input.chars()
+            .enumerate()
+            .for_each(|(i, c)| {
+                if i % 2 == 0 {
+                    santa_position += Direction::parse(c).expect("valid char").to_offset();
+                    santa_visited.insert(santa_position);
+                } else {
+                    robot_position += Direction::parse(c).expect("valid char").to_offset();
+                    robot_visited.insert(robot_position);
+                }
+            });
 
         Ok(Self(santa_visited.union(&robot_visited).copied().collect(), PhantomData))
     }
@@ -71,15 +70,13 @@ impl FromStr for Day<Part2> {
 impl<P> Solution for Day<P> where Day<P>: FromStr {
     type Output = usize;
 
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        Ok(self.len())
-    }
-
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
-        Ok(self.len())
+    /// Count the number of houses visited by Santa/ and the robot.
+    fn solve(&mut self, _part: Part) -> aoc_ornaments::SolutionResult<String> {
+        Ok(self.len().to_string())
     }
 }
 
+/// Run Part 1 and Part 2.
 fn main() -> miette::Result<()> {
     let input = include_str!("./inputs/2015-12-03.txt");
     let mut day_part1 = Day::<Part1>::from_str(input)?;
@@ -89,6 +86,7 @@ fn main() -> miette::Result<()> {
 
     println!("Part 1: {}", part1);
     println!("Part 2: {}", part2);
+
     Ok(())
 }
 

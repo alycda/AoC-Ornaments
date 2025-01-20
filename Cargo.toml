@@ -1,6 +1,6 @@
 [package]
 name = "aoc-ornaments"
-version = "0.1.9"
+version = "0.1.10"
 edition = "2024"
 rust-version = "1.85"
 
@@ -10,9 +10,13 @@ default = ["miette"]
 [dependencies]
 derive_more = { version = "1", features = ["full"] }
 glam = "0.29"
-miette = { version = "7.4.0", optional = true }
-nom = "7.0"
+itertools = "0.14"
 thiserror = "2.0"
+md5 = "0.7"
+miette = { version = "7.4", optional = true, features = ["fancy"]}
+nom = "7.0"
+rand = "0.8"
+serde_json = "1.0"
 
 [dev-dependencies]
-rstest = "0.24.0"
+rstest = "0.24"

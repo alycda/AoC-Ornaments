@@ -21,27 +21,11 @@ impl Not for Part1 {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, derive_more::Deref, Clone, Copy, PartialEq)]
 pub struct Part2(u32);
 
-impl std::ops::Deref for Part2 {
-    type Target = u32;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, derive_more::Deref)]
 struct Day<P>(Grid<P>);
-
-impl<P> std::ops::Deref for Day<P> {
-    type Target = Grid<P>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 impl FromStr for Day<Part1> {
     type Err = miette::Error;
@@ -134,9 +118,17 @@ impl FromStr for Day<Part2> {
 impl Solution for Day<Part1> {
     type Output = usize;
 
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        // Ok(self.iter().filter(|&&b| b).count())
+    /// After following the instructions, how many lights are lit?
+    ///
+    /// Option 1: Explicitly deref using *
+    /// `Ok(self.iter().filter(|&&b| *b).count())`
 
+    /// Option 2: Map to bool first
+    /// `Ok(self.iter().map(|&b| *b).filter(|&b| b).count())`
+
+    /// Option 3: Use as_ref() to get a reference to the inner bool
+    /// `Ok(self.iter().filter(|&b| *b.as_ref()).count())`
+    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         let mut count = 0;
 
         self.walk(|pos| {
@@ -148,7 +140,7 @@ impl Solution for Day<Part1> {
         Ok(count)
     }
 
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         unimplemented!("Part 2")
     }
 }
@@ -156,10 +148,11 @@ impl Solution for Day<Part1> {
 impl Solution for Day<Part2> {
     type Output = usize;
 
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<<Self as Solution>::Output> {
+    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         unimplemented!("Part 1")
     }
 
+    /// What is the total brightness of all lights combined after following Santa's instructions?
     fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
         let mut total = 0;
 
@@ -171,6 +164,7 @@ impl Solution for Day<Part2> {
     }
 }
 
+/// Run Part 1 and Part 2.
 fn main() -> miette::Result<()> {
     let input = include_str!("./inputs/2015-12-06.txt");
     let mut day_part1 = Day::<Part1>::from_str(input)?;

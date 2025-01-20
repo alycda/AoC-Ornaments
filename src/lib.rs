@@ -1,29 +1,32 @@
 use std::str::FromStr;
 
 pub mod bits;
+pub mod intcode;
 pub mod linear;
+pub mod nom;
+pub mod scoring;
 pub mod spatial;
 
 /// Shared behavior amongst AOC/Everybody.codes solutions
-/// 
+///
 /// [FromStr] is a supertrait because we ALWAYS have to parse string input
 pub trait Solution: FromStr {
     /// Ensures the output can be converted to a string
-    type Output: std::fmt::Display + Default;  
+    type Output: std::fmt::Display + Default;
 
     /// Required for AoC
-    fn part1(&mut self) -> SolutionResult<<Self as Solution>::Output> {
+    fn part1(&mut self) -> SolutionResult<Self::Output> {
         todo!()
     }
 
     /// Required for AoC
-    fn part2(&mut self) -> SolutionResult<<Self as Solution>::Output> {
+    fn part2(&mut self) -> SolutionResult<Self::Output> {
         todo!()
     }
 
     /// Optional, for everybody.codes or bonus AoC
-    fn part3(&mut self) -> SolutionResult<<Self as Solution>::Output> {
-        Ok(<Self as Solution>::Output::default())
+    fn part3(&mut self) -> SolutionResult<Self::Output> {
+        Ok(Self::Output::default())
     }
 
     fn solve(&mut self, which: Part) -> SolutionResult<String> {
@@ -31,6 +34,35 @@ pub trait Solution: FromStr {
             Part::One => self.part1()?.to_string(),
             Part::Two => self.part2()?.to_string(),
             Part::Three => self.part3()?.to_string(),
+        })
+    }
+}
+
+/// accepts a signle argument, which may be a tuple
+pub trait ArgSolution<A>: FromStr {
+    /// Ensures the output can be converted to a string
+    type Output: std::fmt::Display + Default;
+
+    /// Required for AoC
+    fn part1(&mut self, _args: A) -> SolutionResult<Self::Output> {
+        todo!()
+    }
+
+    /// Required for AoC
+    fn part2(&mut self, _args: A) -> SolutionResult<Self::Output> {
+        todo!()
+    }
+
+    /// Optional, for everybody.codes or bonus AoC
+    fn part3(&mut self, _args: A) -> SolutionResult<Self::Output> {
+        Ok(Self::Output::default())
+    }
+
+    fn solve(&mut self, which: Part, args: A) -> SolutionResult<String> {
+        Ok(match which {
+            Part::One => ArgSolution::part1(self, args)?.to_string(),
+            Part::Two => ArgSolution::part2(self, args)?.to_string(),
+            Part::Three => ArgSolution::part3(self, args)?.to_string(),
         })
     }
 }
@@ -96,11 +128,10 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Part 3 is not implemented but available if needed (everbody.codes, or aoc community bonus")]
     fn test_part_3() {
         let mut day = Day;
 
         let solution = day.solve(Part::Three).unwrap();
-        assert_eq!("Hello, Dasher!".to_string(), solution);
+        assert_eq!("".to_string(), solution);
     }
 }

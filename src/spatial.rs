@@ -20,7 +20,7 @@ pub const DIAGONALS: [Position; 4] = [Position::NEG_ONE, Position::new(-1, 1), P
 /// Up, SE, Right, NE, Down, NW, Left, SW
 pub const ALL_DIRECTIONS: [Position; 8] = [Position::NEG_Y, Position::ONE, Position::X, Position::new(1, -1), Position::Y, Position::NEG_ONE, Position::NEG_X, Position::new(-1, 1)];
 
-#[derive(Debug)]
+#[derive(Debug, derive_more::Deref, derive_more::DerefMut)]
 pub struct Grid<T>(pub Vec<Vec<T>>);
 
 impl FromStr for Grid<char> {
@@ -38,20 +38,6 @@ impl FromStr for Grid<bool> {
     fn from_str(input: &str) -> miette::Result<Self> {
         Ok(Self(input.lines()
             .map(|line| line.chars().map(|c| c == '#').collect()).collect()))
-    }
-}
-
-impl<T> std::ops::Deref for Grid<T> {
-    type Target = Vec<Vec<T>>;
-    
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl<T> std::ops::DerefMut for Grid<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
     }
 }
 
@@ -177,22 +163,8 @@ impl<T: std::fmt::Debug + Copy + PartialEq> Grid<T> {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, derive_more::Deref, derive_more::DerefMut)]
 pub struct Visited<T>(HashMap<Position, T>);
-
-impl<T> std::ops::Deref for Visited<T> {
-    type Target = HashMap<Position, T>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl<T> std::ops::DerefMut for Visited<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
 
 impl<T> Visited<T> {
     pub fn new(k: Position, v: T) -> Self {
@@ -314,4 +286,12 @@ impl Direction {
     pub fn turn_left(&self) -> Direction {
         self.turn_right().opposite()
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    
+
 }
