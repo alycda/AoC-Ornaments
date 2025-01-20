@@ -49,22 +49,22 @@ impl FromStr for Day {
 impl Solution for Day {
     type Output = u16;
 
-    fn part1(&mut self) -> miette::Result<Self::Output> {
+    fn solve(&mut self, part: Part) -> miette::Result<String> {
         self.execute()?;
-        self.resolve_wire("a")
-    }
 
-    fn part2(&mut self) -> miette::Result<Self::Output> {
-        let part1_result = self.part1()?.to_string();
-        
+        if let Part::One = part {
+            return self.resolve_wire("a").map(|v| v.to_string());
+        }
+
+        let part1_result = self.resolve_wire("a")?.to_string();
         // Reset circuit to initial state
         *self = Day::from_str(include_str!("./inputs/2015-12-07.txt"))?;
-        
+
         // Override wire b with part1's result
         self.wires.insert("b".to_string(), part1_result);
         
         self.execute()?;
-        self.resolve_wire("a")
+        self.resolve_wire("a").map(|v| v.to_string())
     }
 }
 

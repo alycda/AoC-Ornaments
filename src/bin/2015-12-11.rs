@@ -88,13 +88,14 @@ impl Day {
 impl Solution for Day {
     type Output = String;
 
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        Ok(Day::next_password(&self.iter().collect::<String>()))
-    }
+    fn solve(&mut self, part: Part) -> aoc_ornaments::SolutionResult<String> {
+        let next_password = Day::next_password(&self.iter().collect::<String>());
 
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        let part1 = self.part1()?;
-        Ok(Day::next_password(&part1))
+        if let Part::One = part {
+            return Ok(next_password);
+        }
+        
+        Ok(Day::next_password(&next_password))
     }
 }
 

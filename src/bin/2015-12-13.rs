@@ -44,8 +44,7 @@ impl Day {
     }
 
     // Modified find_longest_path to handle circular seating
-    pub fn find_happiest_arrangement(&self, start: &str, current: &str, remaining: &mut HashSet<&str>, 
-                                   total: i64, happiest: &mut Option<i64>) {
+    pub fn find_happiest_arrangement(&self, start: &str, current: &str, remaining: &mut HashSet<&str>, total: i64, happiest: &mut Option<i64>) {
         if remaining.is_empty() {
             // Don't forget to add happiness between last and first person!
             let final_happiness = total + self.get_pair(current, start);
@@ -77,24 +76,27 @@ impl Day {
 impl Solution for Day {
     type Output = i64;
 
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
+    /// Traveling Salesman Circular
+    fn solve(&mut self, part: Part) -> aoc_ornaments::SolutionResult<String> {
         let mut people = self.get_unique();
         let mut max_happiness = None;
-        let start = people.iter().next().unwrap().clone();
-        people.remove(&start);
+
+        let start = match part {
+            Part::One => {
+                let s = people.iter().next().unwrap().to_owned();
+                people.remove(&s);
+                s
+            },
+            Part::Two => {
+                people.insert("Me");
+                "Me"
+            },
+            _ => unimplemented!("Part 3")
+        };
+
         self.find_happiest_arrangement(start, start, &mut people, 0, &mut max_happiness);
 
-        Ok(max_happiness.unwrap())
-    }
-
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        let mut people = self.get_unique();
-        let mut max_happiness = None;
-        let start = "Me";
-        people.insert(start);
-        self.find_happiest_arrangement(start, start, &mut people, 0, &mut max_happiness);
-
-        Ok(max_happiness.unwrap())
+        Ok(max_happiness.ok_or_else(|| miette::miette!("No happiness found"))?.to_string())
     }
 }
 

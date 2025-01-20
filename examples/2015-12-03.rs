@@ -70,14 +70,9 @@ impl FromStr for Day<Part2> {
 impl<P> Solution for Day<P> where Day<P>: FromStr {
     type Output = usize;
 
-    /// Count the number of houses visited by Santa.
-    fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        Ok(self.len())
-    }
-
-    /// Count the number of houses visited by Santa and the robot.
-    fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        Ok(self.len())
+    /// Count the number of houses visited by Santa/ and the robot.
+    fn solve(&mut self, _part: Part) -> aoc_ornaments::SolutionResult<String> {
+        Ok(self.len().to_string())
     }
 }
 
