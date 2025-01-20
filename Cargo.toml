@@ -1,11 +1,13 @@
 [package]
 name = "aoc-ornaments"
+description = "Advent of Code tools"
 version = "0.1.10"
 edition = "2024"
 rust-version = "1.85"
 authors = ["Alyssa Evans <alyda@me.com>"]
 repository = "https://github.com/alycda/AoC-Ornaments"
 exclude = ["src/bin/*", "examples/*"]
+license = "None"
 
 [features]
 default = ["miette"]
