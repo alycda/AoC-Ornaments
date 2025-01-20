@@ -1,6 +1,7 @@
 //! # No Time for a Taxicab
 //! 
 //! Manhattan Distance
+//! Cycle Detection
 //! 
 
 use std::str::FromStr;
@@ -59,34 +60,40 @@ impl Solution for Day {
     }
 
     fn part2(&mut self) -> miette::Result<Self::Output> {
-        let positions = self.iter()
-            .scan(Position::ZERO, |state, p| {
-                *state += p;
-                Some(*dbg!(state))
-            }).collect::<Vec<_>>();
+        let mut visited = std::collections::HashSet::new();
+        let current = Position::ZERO;
+        visited.insert(Position::ZERO);
 
-        let mut visited = std::collections::HashMap::new();
-        for pos in positions {
-            let counter = visited.entry(pos).or_insert(0);
-            *counter += 1;
-            if *counter == 2 {
-                return Ok(manhattan_distance(&Position::ZERO, &pos));
-            }
-        }
+        Ok(self.iter()
+            .flat_map(|straight_line| {
+                // Break down movement into unit steps
+                let unit = match (straight_line.x, straight_line.y) {
+                    (x, 0) => Position::new(x.signum(), 0),
+                    (0, y) => Position::new(0, y.signum()),
+                    _ => unreachable!(),
+                };
+                let steps = straight_line.x.abs().max(straight_line.y.abs());
+                (0..steps).map(move |_| unit)
+            })
+            .scan(current, |pos, step| {
+                *pos += step;
+                Some(*pos)
+            })
+            .find(|pos| !visited.insert(*pos))
+            .map(|pos| manhattan_distance(&Position::ZERO, &pos))
+            // can't find the Easter Bunny HQ
+            .expect("no position visited twice"))
 
-        // can't find the Easter Bunny HQ
-        unreachable!("no position visited twice");
     }
 }
 
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("../inputs/2016-12-01.txt"))?;
     let part1 = day.solve(Part::One)?;
-    let mut day = Day::from_str(include_str!("../inputs/2016-12-01.txt"))?;
     let part2 = day.solve(Part::Two)?;
 
     println!("Part 1: {}", part1);
-    println!("Part 2: {}", part2); // < 215
+    println!("Part 2: {}", part2);
 
     Ok(())
 }
