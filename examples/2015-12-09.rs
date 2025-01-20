@@ -19,17 +19,17 @@ impl<P> std::ops::Deref for Day<P> {
     }
 }
 
-/// Shortest TSP
-struct Shortest;
+/// Travelling Salesman Problem
+struct ShortestPath;
 
-/// Longest TSP
-struct Longest;
+/// Travelling Salesman Problem
+struct LongestPath;
 
-impl Strategy for Shortest {
+impl Strategy for ShortestPath {
     const COMPARE: fn(u32, u32) -> u32 = u32::min;
 }
 
-impl Strategy for Longest {
+impl Strategy for LongestPath {
     const COMPARE: fn(u32, u32) -> u32 = u32::max;
 }
 
@@ -55,8 +55,8 @@ impl<P> FromStr for Day<P> {
 }
 
 impl<P: Strategy> Day<P> {
+    /// Travelling Salesman Problem (Brute Force)
     fn tsp(&self, current: &str, remaining: &mut HashSet<&str>, total: u32, extreme: &mut Option<u32>) {
-
         let strategy = P::COMPARE;
 
         // If no(thing)s remain, we've found a complete path
@@ -67,7 +67,6 @@ impl<P: Strategy> Day<P> {
             };
             return;
         }
-
 
         // Try each remaining city as the next step
         let neighbors: Vec<_> = remaining.iter().copied().collect();
@@ -123,14 +122,14 @@ impl<P: Strategy> Solution for Day<P> {
 
         }
 
-        Ok(most_extreme.ok_or_else(|| miette::miette!("a"))?.to_string())
+        Ok(most_extreme.ok_or_else(|| miette::miette!("Traveling Salesman Problem"))?.to_string())
     }
 }
 
 fn main() -> miette::Result<()> {
     let input = include_str!("./inputs/2015-12-09.txt");
-    let part1 = Day::<Shortest>::from_str(input)?.solve(Part::One)?;
-    let part2 = Day::<Longest>::from_str(input)?.solve(Part::Two)?;
+    let part1 = Day::<ShortestPath>::from_str(input)?.solve(Part::One)?;
+    let part2 = Day::<LongestPath>::from_str(input)?.solve(Part::Two)?;
 
     println!("Part 1: {}", part1); 
     println!("Part 2: {}", part2);
@@ -148,7 +147,7 @@ mod tests {
 London to Belfast = 518
 Dublin to Belfast = 141";
 
-        let mut day = Day::<Shortest>::from_str(input).unwrap();
+        let mut day = Day::<ShortestPath>::from_str(input).unwrap();
         let result = day.solve(Part::One).unwrap();
 
         assert_eq!(result, "605");
@@ -160,7 +159,7 @@ Dublin to Belfast = 141";
 London to Belfast = 518
 Dublin to Belfast = 141";
 
-        let mut day = Day::<Longest>::from_str(input).unwrap();
+        let mut day = Day::<LongestPath>::from_str(input).unwrap();
         let result = day.solve(Part::Two).unwrap();
 
         assert_eq!(result, "982");
