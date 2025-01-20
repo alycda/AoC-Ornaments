@@ -3,7 +3,7 @@ name = "aoc-ornaments"
 version = "0.1.10"
 edition = "2024"
 rust-version = "1.85"
-exclude = ["src/bin/*"]
+exclude = ["src/bin/*", "examples/*"]
 
 [features]
 default = ["miette"]
