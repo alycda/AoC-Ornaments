@@ -7,7 +7,7 @@ rust-version = "1.85"
 authors = ["Alyssa Evans <alyda@me.com>"]
 repository = "https://github.com/alycda/AoC-Ornaments"
 exclude = ["src/bin/*", "examples/*"]
-license = "None"
+license = "GPL-3.0"
 
 [features]
 default = ["miette"]
