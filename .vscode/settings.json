@@ -9,7 +9,7 @@
     // "editor.parameterHints.enabled": false,
     "editor.overviewRulerBorder": false,
     "editor.scrollbar.verticalScrollbarSize": 0,
-    "window.title": "Advent of Code: Rust 2024",
+    "window.title": "Advent of Code: Rust",
     // "editor.scrollbar.horizontal": "hidden",
     // "editor.scrollbar.vertical": "hidden",
     "workbench.sideBar.location": "right",
