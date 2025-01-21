@@ -58,13 +58,51 @@ impl Day {
             }).collect::<Vec<_>>()))
     }
 
-    fn to_digits(&self) -> Vec<usize> {
-        todo!()
-    }
+    // ButtonPad<> and MyButtonPad are still different types and Generics are overkill
+    // fn to_digits(&self, pad: ) -> Vec<usize> {
+    //     let mut start = *pad.get(&'5').expect("Invalid start position (should be (1, 1)");
+
+    //     self.iter().map(|directions| {
+    //         for direction in directions {
+    //             let next = start + direction.to_offset();
+
+    //             if pad.values().any(|&pos| pos == next) {
+    //                 start = next;
+    //             }
+    //         }
+
+    //         pad.iter().find(|(_, pos)| **pos == start).unwrap().0
+
+    //     }).collect::<String>()
+    // }
 }
 
 impl Solution for Day {
     type Output = String;
+
+    // `match` arms have incompatible types
+    // fn solve(&mut self, part: Part) -> miette::Result<String> {
+    //     let pad = match part {
+    //         Part::One => ButtonPad::<NumberPad3x3Telephone>::default(),
+    //         Part::Two => MyButtonPad::default(),
+    //         _ => unreachable!("Part 3 is not implemented"),
+    //     };
+
+    //     let mut start = *pad.get(&'5').expect("Invalid start position");
+
+    //     Ok(self.iter().map(|directions| {
+    //         for direction in directions {
+    //             let next = start + direction.to_offset();
+
+    //             if pad.values().any(|&pos| pos == next) {
+    //                 start = next;
+    //             }
+    //         }
+
+    //         pad.iter().find(|(_, pos)| **pos == start).unwrap().0
+
+    //     }).collect::<String>())
+    // }
 
     fn part1(&mut self) -> miette::Result<Self::Output> {
         let pad = ButtonPad::<NumberPad3x3Telephone>::default();
@@ -94,10 +132,7 @@ impl Solution for Day {
             for direction in directions {
                 let next = start + direction.to_offset();
 
-                // dbg!(&start, &next);
-
                 if pad.values().any(|&pos| pos == next) {
-                    // dbg!(&next);
                     start = next;
                 }
             }
