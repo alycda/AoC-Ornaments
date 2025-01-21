@@ -244,15 +244,15 @@ impl Direction {
     }
 
     /// for parsing from a CHAR, otherwise use [FromStr] because we get [String.parse] for free
-    pub fn parse(c: char) -> miette::Result<Self, DirectionError> {
+    pub fn parse(c: &char) -> miette::Result<Self, DirectionError> {
         match c.to_ascii_lowercase() {
-            '^' | 'a' | 'n' => Ok(Direction::Up),
-            'v' | 'x' | 's' => Ok(Direction::Down),
+            '^' | 'a' | 'n' | 'u' => Ok(Direction::Up),
+            'v' | 'x' | 's' | 'd' => Ok(Direction::Down),
             // CARFEUL here, I thought PlayStation buttons (`#`) were cute...
-            '<' | '#' | 'e' => Ok(Direction::Left),
+            '<' | '#' | 'e' | 'l' => Ok(Direction::Left),
             // also here: `o`
-            '>' | 'o' | 'w' => Ok(Direction::Right),
-            _ => Err(DirectionError::InvalidChar(c))
+            '>' | 'o' | 'w' | 'r' => Ok(Direction::Right),
+            _ => Err(DirectionError::InvalidChar(*c))
         }
     }
 

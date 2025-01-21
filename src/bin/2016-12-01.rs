@@ -1,4 +1,4 @@
-//! # No Time for a Taxicab
+//! # Day 1: No Time for a Taxicab
 //! 
 //! Manhattan Distance
 //! Cycle Detection

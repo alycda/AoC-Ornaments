@@ -3,6 +3,7 @@ use std::str::FromStr;
 pub mod bits;
 pub mod intcode;
 pub mod linear;
+pub mod keypad;
 pub mod nom;
 pub mod scoring;
 pub mod spatial;
