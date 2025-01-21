@@ -10,6 +10,15 @@ pub struct ButtonPad<T> {
     _kind: PhantomData<T>,
 }
 
+impl<T> ButtonPad<T> {
+    pub fn new(map: HashMap<char, Position>) -> Self {
+        Self {
+            map,
+            _kind: PhantomData,
+        }
+    }
+}
+
 impl<T> std::ops::Deref for ButtonPad<T> {
     type Target = HashMap<char, Position>;
     
