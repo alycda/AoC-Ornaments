@@ -30,7 +30,7 @@
 //! 
 //! which allocates a new string, similar to format! macro.
 
-use nom::{character::complete::{newline, not_line_ending}, multi::separated_list0};
+use nom::{branch::alt, character::complete::{char, multispace0, newline, not_line_ending, u32}, combinator::opt, multi::{separated_list0, separated_list1}, IResult};
 
 // type IResult<'a, O> = nom::IResult<&'a str, O, nom::error::Error<&'a str>>;
 
@@ -38,4 +38,16 @@ use nom::{character::complete::{newline, not_line_ending}, multi::separated_list
 pub fn split_newlines(input: &str) -> miette::Result<(&str, Vec<&str>)> {
     separated_list0(newline::<&str, nom::error::Error<&str>>, not_line_ending)(input)
         .map_err(|e| miette::miette!("Failed to parse input: {e}"))
+}
+
+pub fn parse_dimensions(input: &str) -> IResult<&str, (u32, u32, u32)> {
+    // let (input, _) = opt(multispace0)(input)?;
+    let (input, nums) = separated_list1(alt((char('x'), char(' '))), u32)(input)?;
+    match nums.as_slice() {
+        [l, w, h] => Ok((input, (*l, *w, *h))),
+        _ => Err(nom::Err::Error(nom::error::Error::new(
+            input,
+            nom::error::ErrorKind::LengthValue
+        )))
+    }
 }
