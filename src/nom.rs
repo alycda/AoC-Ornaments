@@ -30,7 +30,7 @@
 //! 
 //! which allocates a new string, similar to format! macro.
 
-use nom::{branch::alt, character::complete::{char, multispace0, newline, not_line_ending, u32}, combinator::opt, multi::{separated_list0, separated_list1}, IResult};
+use nom::{branch::alt, character::complete::{char, newline, not_line_ending, u32}, multi::{separated_list0, separated_list1}, IResult};
 
 // type IResult<'a, O> = nom::IResult<&'a str, O, nom::error::Error<&'a str>>;
 
