@@ -2,7 +2,7 @@
 
 use std::{collections::HashSet, str::FromStr};
 
-use aoc_ornaments::{linear::Distances, Part, Solution};
+use aoc_ornaments::{graph::Distances, Part, Solution};
 
 type Happiness = Distances<i64>;
 
