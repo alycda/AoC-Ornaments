@@ -1,81 +1,11 @@
 //! Day 9: All in a Single Night
 
-use std::{collections::HashSet, str::FromStr};
+use std::str::FromStr;
 
-use aoc_ornaments::{graph::Distances, Part, Solution};
-
-#[derive(Debug)]
-struct TSP<T>(Option<T>, fn(T, T) -> T);
-
-impl<T: std::ops::Add<Output = T> + Clone + Copy + Ord + Default> TSP<T> {
-    fn new(compare: fn(T, T) -> T) -> Self {
-        Self(None, compare)
-    }
-
-    fn best(map: &Distances<T>, strategy: fn(T, T) -> T) -> Option<T> {
-        let set = map.get_unique();
-        let mut best_path = None;
-
-        for start in set.iter() {
-            let mut remaining = set.clone();
-            remaining.remove(start); // Remove starting city from remaining set
-
-            let mut tsp = Self::new(strategy);
-            tsp.call(map, start, &mut remaining, T::default());
-
-            // Update overall best if this path is STRATEGY
-            if let Some(path_length) = *tsp {
-                best_path = match best_path {
-                    None => Some(path_length),
-                    Some(current_best) => Some(strategy(current_best, path_length)),
-                };
-            }
-        }
-
-        best_path
-    }
-
-    fn call(
-        &mut self,
-        locations: &Distances<T>,
-        current: &str,
-        remaining: &mut HashSet<&str>,
-        running_total: T,
-    ) {
-        if remaining.is_empty() {
-            self.0 = match self.0 {
-                None => Some(running_total),
-                Some(current_min) => Some((self.1)(current_min, running_total)),
-            };
-            return;
-        }
-
-        let neighbors: Vec<_> = remaining.iter().copied().collect();
-        for next in neighbors {
-            let key = if current < next {
-                (current.to_string(), next.to_string())
-            } else {
-                (next.to_string(), current.to_string())
-            };
-
-            if let Some(distance) = locations.get(&key) {
-                // dbg!(running_total, distance);
-
-                remaining.remove(next);
-                self.call(locations, next, remaining, running_total + *distance);
-                remaining.insert(next);
-            }
-        }
-    }
-}
-
-impl<T> std::ops::Deref for TSP<T> {
-    type Target = Option<T>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
+use aoc_ornaments::{
+    graph::{Distances, TravelingSales},
+    Part, Solution,
+};
 
 #[derive(Debug, derive_more::Deref)]
 struct Day(Distances<u32>);
@@ -116,7 +46,7 @@ impl Solution for Day {
             _ => unimplemented!(),
         };
 
-        Ok(TSP::<Self::Output>::best(self, strategy)
+        Ok(TravelingSales::<Self::Output>::best(self, strategy)
             .unwrap()
             .to_string())
     }
