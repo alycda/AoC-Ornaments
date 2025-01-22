@@ -129,54 +129,11 @@ impl<P> FromStr for Day<P> {
     }
 }
 
-impl<P: Strategy> Day<P> {
-    /// Travelling Salesman Problem (Brute Force)
-    fn tsp(
-        &self,
-        current: &str,
-        remaining: &mut HashSet<&str>,
-        total: u32,
-        extreme: &mut Option<u32>,
-    ) {
-        let strategy = P::COMPARE;
-
-        // If no(thing)s remain, we've found a complete path
-        if remaining.is_empty() {
-            *extreme = match *extreme {
-                None => Some(total),
-                Some(s) => Some(strategy(s, total)),
-            };
-            return;
-        }
-
-        // Try each remaining city as the next step
-        let neighbors: Vec<_> = remaining.iter().copied().collect();
-        for next in neighbors {
-            // Get distance to this neighbor
-            let key = if current < next {
-                (current.to_string(), next.to_string())
-            } else {
-                (next.to_string(), current.to_string())
-            };
-            let distance = self.get(&key).unwrap();
-
-            // Visit this neighbor
-            remaining.remove(next);
-            self.tsp(next, remaining, total + *distance, extreme);
-            remaining.insert(next);
-        }
-    }
-}
-
 impl<P: Strategy> Solution for Day<P> {
     type Output = u32;
 
-    fn part1(&mut self) -> miette::Result<Self::Output> {
-        Ok(TSP::best(self, u32::min).unwrap())
-    }
-
-    fn part2(&mut self) -> miette::Result<Self::Output> {
-        Ok(TSP::best(self, u32::max).unwrap())
+    fn solve(&mut self, _part: Part) -> aoc_ornaments::SolutionResult<String> {
+        Ok(TSP::best(self, P::COMPARE).unwrap().to_string())
     }
 }
 
