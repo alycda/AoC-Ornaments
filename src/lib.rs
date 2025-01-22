@@ -2,8 +2,9 @@ use std::str::FromStr;
 
 pub mod bits;
 pub mod intcode;
-pub mod linear;
+pub mod graph;
 pub mod keypad;
+pub mod graph;
 pub mod nom;
 pub mod scoring;
 pub mod spatial;

@@ -2,7 +2,7 @@
 
 use std::{collections::HashMap, str::FromStr};
 
-use aoc_ornaments::{linear::Uniqued, Part, Solution};
+use aoc_ornaments::{graph::Uniqued, Part, Solution};
 use nom::{bytes::complete::{tag, take_while1}, character::complete::{alpha1, multispace0}, multi::separated_list1, sequence::{preceded, tuple}, IResult};
 
 type Molecule = String;
