@@ -12,6 +12,30 @@ impl TSP {
         Self(None, compare)
     }
 
+    fn best(map: &Distances<u32>, strategy: fn(u32, u32) -> u32) -> Option<u32> {
+        let set = map.get_unique();
+        let mut best_path = None;
+
+        for start in set.iter() {
+            let mut remaining = set.clone();
+            remaining.remove(start); // Remove starting city from remaining set
+
+            let mut tsp = Self::new(strategy);
+            tsp.call(map, start, &mut remaining, 0);
+
+            // Update overall minimum if this path is shorter
+            if let Some(path_length) = *tsp {
+                best_path = match best_path {
+                    None => Some(path_length),
+                    // Some(current_min) => Some(current_min.min(path_length)),
+                    Some(current_best) => Some(strategy(current_best, best_path.unwrap_or(0))),
+                };
+            }
+        }
+
+        best_path
+    }
+
     fn call(
         &mut self,
         locations: &Distances<u32>,
@@ -206,7 +230,7 @@ impl<P: Strategy> Solution for Day<P> {
             remaining.remove(start); // Remove starting city from remaining set
 
             let mut tsp = TSP::new(u32::min);
-            tsp.call(&self, start, &mut remaining, 0);
+            tsp.call(self, start, &mut remaining, 0);
 
             // Update overall minimum if this path is shorter
             if let Some(path_length) = *tsp {
@@ -231,7 +255,7 @@ impl<P: Strategy> Solution for Day<P> {
             remaining.remove(start); // Remove starting city from remaining set
 
             let mut tsp = TSP::new(u32::max);
-            tsp.call(&self, start, &mut remaining, 0);
+            tsp.call(self, start, &mut remaining, 0);
 
             // Update overall minimum if this path is shorter
             if let Some(path_length) = *tsp {
@@ -251,10 +275,10 @@ impl<P: Strategy> Solution for Day<P> {
 fn main() -> miette::Result<()> {
     let input = include_str!("./inputs/2015-12-09.txt");
     let part1 = Day::<ShortestPath>::from_str(input)?.solve(Part::One)?;
-    // let part2 = Day::<LongestPath>::from_str(input)?.solve(Part::Two)?;
+    let part2 = Day::<LongestPath>::from_str(input)?.solve(Part::Two)?;
 
     println!("Part 1: {}", part1);
-    // println!("Part 2: {}", part2);
+    println!("Part 2: {}", part2);
 
     Ok(())
 }
