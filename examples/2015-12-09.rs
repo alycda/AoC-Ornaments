@@ -5,14 +5,14 @@ use std::{collections::HashSet, marker::PhantomData, str::FromStr};
 use aoc_ornaments::{linear::Distances, Part, Solution};
 
 #[derive(Debug)]
-struct TSP(Option<u32>, fn(u32, u32) -> u32);
+struct TSP<T>(Option<T>, fn(T, T) -> T);
 
-impl TSP {
-    fn new(compare: fn(u32, u32) -> u32) -> Self {
+impl<T: std::ops::Add<Output = T> + Clone + Copy + Ord + Default> TSP<T> {
+    fn new(compare: fn(T, T) -> T) -> Self {
         Self(None, compare)
     }
 
-    fn best(map: &Distances<u32>, strategy: fn(u32, u32) -> u32) -> Option<u32> {
+    fn best(map: &Distances<T>, strategy: fn(T, T) -> T) -> Option<T> {
         let set = map.get_unique();
         let mut best_path = None;
 
@@ -21,7 +21,7 @@ impl TSP {
             remaining.remove(start); // Remove starting city from remaining set
 
             let mut tsp = Self::new(strategy);
-            tsp.call(map, start, &mut remaining, 0);
+            tsp.call(map, start, &mut remaining, T::default());
 
             // Update overall minimum if this path is shorter
             if let Some(path_length) = *tsp {
@@ -37,10 +37,10 @@ impl TSP {
 
     fn call(
         &mut self,
-        locations: &Distances<u32>,
+        locations: &Distances<T>,
         current: &str,
         remaining: &mut HashSet<&str>,
-        running_total: u32,
+        running_total: T,
     ) {
         if remaining.is_empty() {
             self.0 = match self.0 {
@@ -62,15 +62,15 @@ impl TSP {
                 // dbg!(running_total, distance);
 
                 remaining.remove(next);
-                self.call(locations, next, remaining, running_total + distance);
+                self.call(locations, next, remaining, running_total + *distance);
                 remaining.insert(next);
             }
         }
     }
 }
 
-impl std::ops::Deref for TSP {
-    type Target = Option<u32>;
+impl<T> std::ops::Deref for TSP<T> {
+    type Target = Option<T>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -133,7 +133,7 @@ impl<P: Strategy> Solution for Day<P> {
     type Output = u32;
 
     fn solve(&mut self, _part: Part) -> aoc_ornaments::SolutionResult<String> {
-        Ok(TSP::best(self, P::COMPARE).unwrap().to_string())
+        Ok(TSP::<u32>::best(self, P::COMPARE).unwrap().to_string())
     }
 }
 
