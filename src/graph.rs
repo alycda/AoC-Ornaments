@@ -10,7 +10,7 @@ use std::collections::{BTreeMap, BTreeSet, HashSet};
 #[derive(Debug, derive_more::Deref, derive_more::DerefMut)]
 pub struct Distances<T>(BTreeMap<(String, String), T>);
 
-impl<T: std::ops::Add<Output = T> + Clone + Copy + Ord> Distances<T> {
+impl<T: std::ops::Add<Output = T> + Clone + Copy + Ord + Default> Distances<T> {
     pub fn new() -> Self {
         Self(BTreeMap::new())
     }
@@ -40,74 +40,26 @@ impl<T: std::ops::Add<Output = T> + Clone + Copy + Ord> Distances<T> {
     //     set
     // }
 
-    /// recursive
+    /// straight line
     pub fn find_shortest_path(
         &self,
-        current: &str,
-        remaining: &mut HashSet<&str>,
-        total: T,
-        shortest: &mut Option<T>,
-    ) {
-        // If no(thing)s remain, we've found a complete path
-        if remaining.is_empty() {
-            *shortest = match *shortest {
-                None => Some(total),
-                Some(s) => Some(s.min(total)),
-            };
-            return;
-        }
-
-        // Try each remaining city as the next step
-        let neighbors: Vec<_> = remaining.iter().copied().collect();
-        for next in neighbors {
-            // Get distance to this neighbor
-            let key = if current < next {
-                (current.to_string(), next.to_string())
-            } else {
-                (next.to_string(), current.to_string())
-            };
-            let distance = self.get(&key).unwrap();
-
-            // Visit this neighbor
-            remaining.remove(next);
-            self.find_shortest_path(next, remaining, total + *distance, shortest);
-            remaining.insert(next);
-        }
+    ) -> Option<T> {
+        TravelingSales::best(self, T::min)
     }
 
-    /// recursive
+    /// straight line
     pub fn find_longest_path(
         &self,
-        current: &str,
-        remaining: &mut HashSet<&str>,
-        total: T,
-        longest: &mut Option<T>,
-    ) {
-        // If no(thing)s remain, we've found a complete path
-        if remaining.is_empty() {
-            *longest = match *longest {
-                None => Some(total),
-                Some(s) => Some(s.max(total)),
-            };
-            return;
-        }
+    ) -> Option<T> {
+        TravelingSales::best(self, T::max)
+    }
 
-        // Try each remaining item as the next step
-        let neighbors: Vec<_> = remaining.iter().copied().collect();
-        for next in neighbors {
-            // Get distance to this neighbor
-            let key = if current < next {
-                (current.to_string(), next.to_string())
-            } else {
-                (next.to_string(), current.to_string())
-            };
-            let distance = self.get(&key).unwrap();
+    pub fn find_longest_circular_path(
+        &self,
+    ) -> Option<T> {
+        // TravelingSales::best_circular(self, T::max)
 
-            // Visit this neighbor
-            remaining.remove(next);
-            self.find_longest_path(next, remaining, total + *distance, longest);
-            remaining.insert(next);
-        }
+        todo!()
     }
 
     pub fn get_unique(&self) -> HashSet<&str> {
@@ -136,6 +88,7 @@ impl<T: std::ops::Add<Output = T> + Clone + Copy + Ord + Default> TravelingSales
         Self(None, compare)
     }
 
+    /// straight line
     pub fn best(map: &Distances<T>, strategy: fn(T, T) -> T) -> Option<T> {
         let set = map.get_unique();
         let mut best_path = None;
@@ -145,7 +98,7 @@ impl<T: std::ops::Add<Output = T> + Clone + Copy + Ord + Default> TravelingSales
             remaining.remove(start); // Remove starting city from remaining set
 
             let mut tsp = Self::new(strategy);
-            tsp.call(map, start, &mut remaining, T::default());
+            tsp.path(map, start, &mut remaining, T::default());
 
             // Update overall best if this path is STRATEGY
             if let Some(path_length) = *tsp {
@@ -159,7 +112,8 @@ impl<T: std::ops::Add<Output = T> + Clone + Copy + Ord + Default> TravelingSales
         best_path
     }
 
-    fn call(
+    /// straight line
+    fn path(
         &mut self,
         locations: &Distances<T>,
         current: &str,
@@ -186,10 +140,30 @@ impl<T: std::ops::Add<Output = T> + Clone + Copy + Ord + Default> TravelingSales
                 // dbg!(running_total, distance);
 
                 remaining.remove(next);
-                self.call(locations, next, remaining, running_total + *distance);
+                self.path(locations, next, remaining, running_total + *distance);
                 remaining.insert(next);
             }
         }
+    }
+
+    fn best_circular() {
+        todo!()
+    }
+
+    fn circular_path(
+        locations: &Distances<T>,
+        current: &str,
+        remaining: &mut HashSet<&str>,
+        running_total: T,
+    ) {
+        if remaining.is_empty() {
+            // Add the final connection back to start
+
+            return;
+        }
+        let neighbors: Vec<_> = remaining.iter().copied().collect();
+
+        todo!()
     }
 }
 

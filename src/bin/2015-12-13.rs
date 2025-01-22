@@ -43,6 +43,7 @@ impl Day {
         a_to_b + b_to_a        
     }
 
+    /// TODO: TravelingSales::best_circular
     // Modified find_longest_path to handle circular seating
     pub fn find_happiest_arrangement(&self, start: &str, current: &str, remaining: &mut HashSet<&str>, total: i64, happiest: &mut Option<i64>) {
         if remaining.is_empty() {
