@@ -1,7 +1,7 @@
 [package]
 name = "aoc-ornaments"
 description = "Advent of Code tools"
-version = "0.1.10"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["Alyssa Evans <alyda@me.com>"]
@@ -13,6 +13,7 @@ license = "GPL-3.0"
 default = ["miette"]
 
 [dependencies]
+the_algorithms_rust = { git = "https://github.com/TheAlgorithms/Rust", branch = "master" }
 derive_more = { version = "1", features = ["full"] }
 glam = "0.29"
 itertools = "0.14"
