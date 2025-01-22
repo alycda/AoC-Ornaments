@@ -221,6 +221,31 @@ impl<P: Strategy> Solution for Day<P> {
         // Ok(min_path.map(|x| x.to_string()).unwrap())
         // .ok_or_else(|| miette::miette!("No valid path found"))
     }
+
+    fn part2(&mut self) -> miette::Result<Self::Output> {
+        let cities = self.get_unique();
+        let mut max_path = None;
+
+        for start in cities.iter() {
+            let mut remaining = cities.clone();
+            remaining.remove(start); // Remove starting city from remaining set
+
+            let mut tsp = TSP::new(u32::max);
+            tsp.call(&self, start, &mut remaining, 0);
+
+            // Update overall minimum if this path is shorter
+            if let Some(path_length) = *tsp {
+                max_path = match max_path {
+                    None => Some(path_length),
+                    Some(current_max) => Some(current_max.max(path_length)),
+                };
+            }
+        }
+
+        Ok(max_path.unwrap())
+        // Ok(min_path.map(|x| x.to_string()).unwrap())
+        // .ok_or_else(|| miette::miette!("No valid path found"))
+    }
 }
 
 fn main() -> miette::Result<()> {
@@ -253,15 +278,18 @@ Belfast to Dublin = 141";
         assert_eq!(result, "605");
     }
 
-    //     #[test]
-    //     fn test_part2() {
-    //         let input = "London to Dublin = 464
-    // London to Belfast = 518
-    // Dublin to Belfast = 141";
+    #[test]
+    fn test_part2() {
+        let input = "London to Dublin = 464
+Dublin to London = 464
+London to Belfast = 518
+Belfast to London = 518
+Dublin to Belfast = 141
+Belfast to Dublin = 141";
 
-    //         let mut day = Day::<LongestPath>::from_str(input).unwrap();
-    //         let result = day.solve(Part::Two).unwrap();
+        let mut day = Day::<LongestPath>::from_str(input).unwrap();
+        let result = day.solve(Part::Two).unwrap();
 
-    //         assert_eq!(result, "982");
-    //     }
+        assert_eq!(result, "982");
+    }
 }
