@@ -28,7 +28,9 @@ impl TSP {
                 best_path = match best_path {
                     None => Some(path_length),
                     // Some(current_min) => Some(current_min.min(path_length)),
-                    Some(current_best) => Some(strategy(current_best, best_path.unwrap_or(0))),
+                    Some(current_best) => {
+                        Some(dbg!(strategy(current_best, best_path.unwrap_or(0))))
+                    }
                 };
             }
         }
@@ -222,53 +224,51 @@ impl<P: Strategy> Solution for Day<P> {
     // }
 
     fn part1(&mut self) -> miette::Result<Self::Output> {
-        let cities = self.get_unique();
-        let mut min_path = None;
+        // let cities = self.get_unique();
+        // let mut min_path = None;
 
-        for start in cities.iter() {
-            let mut remaining = cities.clone();
-            remaining.remove(start); // Remove starting city from remaining set
+        // for start in cities.iter() {
+        //     let mut remaining = cities.clone();
+        //     remaining.remove(start); // Remove starting city from remaining set
 
-            let mut tsp = TSP::new(u32::min);
-            tsp.call(self, start, &mut remaining, 0);
+        //     let mut tsp = TSP::new(u32::min);
+        //     tsp.call(self, start, &mut remaining, 0);
 
-            // Update overall minimum if this path is shorter
-            if let Some(path_length) = *tsp {
-                min_path = match min_path {
-                    None => Some(path_length),
-                    Some(current_min) => Some(current_min.min(path_length)),
-                };
-            }
-        }
+        //     // Update overall minimum if this path is shorter
+        //     if let Some(path_length) = *tsp {
+        //         min_path = match min_path {
+        //             None => Some(path_length),
+        //             Some(current_min) => Some(current_min.min(path_length)),
+        //         };
+        //     }
+        // }
 
-        Ok(min_path.unwrap())
-        // Ok(min_path.map(|x| x.to_string()).unwrap())
-        // .ok_or_else(|| miette::miette!("No valid path found"))
+        // Ok(min_path.unwrap())
+        Ok(TSP::best(self, u32::min).unwrap())
     }
 
     fn part2(&mut self) -> miette::Result<Self::Output> {
-        let cities = self.get_unique();
-        let mut max_path = None;
+        // let cities = self.get_unique();
+        // let mut max_path = None;
 
-        for start in cities.iter() {
-            let mut remaining = cities.clone();
-            remaining.remove(start); // Remove starting city from remaining set
+        // for start in cities.iter() {
+        //     let mut remaining = cities.clone();
+        //     remaining.remove(start); // Remove starting city from remaining set
 
-            let mut tsp = TSP::new(u32::max);
-            tsp.call(self, start, &mut remaining, 0);
+        //     let mut tsp = TSP::new(u32::max);
+        //     tsp.call(self, start, &mut remaining, 0);
 
-            // Update overall minimum if this path is shorter
-            if let Some(path_length) = *tsp {
-                max_path = match max_path {
-                    None => Some(path_length),
-                    Some(current_max) => Some(current_max.max(path_length)),
-                };
-            }
-        }
+        //     // Update overall minimum if this path is shorter
+        //     if let Some(path_length) = *tsp {
+        //         max_path = match max_path {
+        //             None => Some(path_length),
+        //             Some(current_max) => Some(current_max.max(path_length)),
+        //         };
+        //     }
+        // }
 
-        Ok(max_path.unwrap())
-        // Ok(min_path.map(|x| x.to_string()).unwrap())
-        // .ok_or_else(|| miette::miette!("No valid path found"))
+        // Ok(max_path.unwrap())
+        Ok(TSP::best(self, u32::max).unwrap())
     }
 }
 
