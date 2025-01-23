@@ -15,7 +15,7 @@ use nom::{
 /// - room number
 /// - checksum
 #[derive(Debug, derive_more::Deref)]
-struct Day(Vec<(usize, String, HashMap<char, usize>)>);
+struct Day(Vec<(usize, String, String)>);
 
 impl FromStr for Day {
     type Err = miette::Error;
@@ -31,14 +31,18 @@ impl FromStr for Day {
 }
 
 impl Day {
-    fn parse_line(input: &str) -> IResult<&str, (usize, String, HashMap<char, usize>)> {
+    fn parse_line(input: &str) -> IResult<&str, (usize, String, String)> {
         let (input, parts) = many1(terminated(alpha1, char('-')))(input)?;
-        let map = Self::count_frequencies(&parts);
+        let cipher = parts.join("-");
         let (_, (id, checksum)) = Self::parse_id_and_checksum(input)?;
 
         Ok((
             "",
-            (id.parse::<usize>().expect("num"), checksum.to_string(), map),
+            (
+                id.parse::<usize>().expect("num"),
+                checksum.to_string(),
+                cipher,
+            ),
         ))
     }
 
@@ -46,14 +50,16 @@ impl Day {
         tuple((digit1, delimited(char('['), alpha1, char(']'))))(input)
     }
 
-    fn count_frequencies(items: &[&str]) -> HashMap<char, usize> {
+    fn count_frequencies(item: &str) -> HashMap<char, usize> {
         let mut freq_map: HashMap<char, usize> = HashMap::new();
 
-        for &item in items {
-            for c in item.chars() {
+        // for &item in items {
+        for c in item.chars() {
+            if c != '-' {
                 *freq_map.entry(c).or_insert(0) += 1;
             }
         }
+        // }
 
         freq_map
     }
@@ -63,13 +69,10 @@ impl Solution for Day {
     type Output = usize;
 
     fn part1(&mut self) -> miette::Result<Self::Output> {
-        // dbg!(&self);
-
         Ok(self
             .iter()
-            .filter_map(|(id, checksum, map)| {
-                // let a = map.iter().map(|(k, v)| k.to_string()).collect::<String>();
-                // dbg!(map.iter().collect::<String>());
+            .filter_map(|(id, checksum, cipher)| {
+                let map = Self::count_frequencies(cipher);
 
                 // Convert to vec for sorting
                 let mut freq_vec: Vec<_> = map.iter().collect();
@@ -82,7 +85,6 @@ impl Solution for Day {
                     .map(|(k, v)| k.to_string())
                     .collect::<String>();
 
-                // if a == *checksum {
                 if a.starts_with(checksum) {
                     return Some(id);
                 }
@@ -91,15 +93,46 @@ impl Solution for Day {
             })
             .sum())
     }
+
+    fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
+        Ok(self
+            .iter()
+            .find(|(id, _, cipher)| {
+                let name = cipher
+                    .bytes()
+                    .map(|b| {
+                        if b.is_ascii_lowercase() {
+                            // Convert to 0-25 range
+                            let base = b - b'a';
+                            let shift = id % 26;
+
+                            let shifted = (base as i16 + shift as i16).rem_euclid(26) as u8;
+                            // Convert back to ascii range
+                            shifted + b'a'
+                        } else if b == b'-' {
+                            b' '
+                        } else {
+                            b
+                        }
+                    })
+                    .map(|b| b as char)
+                    .collect::<String>();
+
+                // dbg!(&name) == "northpole object storage"
+                &name == "northpole object storage"
+            })
+            .unwrap()
+            .0)
+    }
 }
 
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("../inputs/2016-12-04.txt"))?;
     let part1 = day.solve(Part::One)?;
-    // let part2 = day.solve(Part::Two)?;
+    let part2 = day.solve(Part::Two)?;
 
     println!("Part 1: {}", part1);
-    // println!("Part 2: {}", part2);
+    println!("Part 2: {}", part2);
 
     Ok(())
 }
@@ -120,14 +153,21 @@ mod tests {
         assert_eq!(day.solve(Part::One).unwrap(), expected.to_string());
     }
 
-    //     #[test]
-    //     fn part_1() {
-    //         let input = "aaaaa-bbb-z-y-x-123[abxyz]
-    // a-b-c-d-e-f-g-h-987[abcde]
-    // not-a-real-room-404[oarel]
-    // totally-real-room-200[decoy]";
+    #[test]
+    fn part_1() {
+        let input = "aaaaa-bbb-z-y-x-123[abxyz]
+a-b-c-d-e-f-g-h-987[abcde]
+not-a-real-room-404[oarel]
+totally-real-room-200[decoy]";
 
-    //         let mut day = Day::from_str(input).unwrap();
-    //         assert_eq!(day.solve(Part::One).unwrap(), "1514");
-    //     }
+        let mut day = Day::from_str(input).unwrap();
+        assert_eq!(day.solve(Part::One).unwrap(), "1514");
+    }
+
+    // #[rstest]
+    // #[case("qzmt-zixmtkozy-ivhz-343[zzzab]", "very encrypted name")]
+    // fn part_2(#[case] input: &str, #[case] expected: &str) {
+    //     let mut day = Day::from_str(input).unwrap();
+    //     assert_eq!(day.solve(Part::Two).unwrap(), expected.to_string());
+    // }
 }
