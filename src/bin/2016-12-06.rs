@@ -6,32 +6,21 @@ use std::{collections::HashMap, str::FromStr};
 use aoc_ornaments::{Part, Solution};
 
 #[derive(Debug, derive_more::Deref)]
-struct Day([Vec<char>; 8]);
-// struct Day(HashMap<char, usize>);
+struct Day(Vec<HashMap<char, usize>>);
 
 impl FromStr for Day {
     type Err = miette::Error;
 
     fn from_str(input: &str) -> miette::Result<Self> {
-        let cols = [const { Vec::<char>::new() }; 8];
+        let cols: Vec<_> = (0..8).map(|_| HashMap::new()).collect();
 
-        Ok(Self(input.lines().fold(cols, |mut acc, line| {
-            line.chars().enumerate().for_each(|(i, x)| acc[i].push(x));
+        Ok(Self(input.lines().fold(cols, |mut c, line| {
+            line.chars()
+                .enumerate()
+                .for_each(|(i, x)| *c[i].entry(x).or_insert(0) += 1);
 
-            acc
+            c
         })))
-        // dbg!(Self(input.lines().scan(cols, |c, &line| {
-        //     line.chars().enumerate().for_each(|(i, x)| c[i].push(x));
-
-        //     c
-        // })));
-
-        // Ok(Self(input.lines().fold(HashMap::new(), |mut acc, line| {
-        //     line.chars().for_each(|c| {
-        //         *acc.entry(c).or_insert(0) += 1;
-        //     });
-        //     acc
-        // })))
     }
 }
 
@@ -39,36 +28,17 @@ impl Solution for Day {
     type Output = String;
 
     fn part1(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        // dbg!(&self);
-
-        for chars in self.iter() {
-            let mut map = HashMap::new();
-            // dbg!(&chars);
-            chars.iter().for_each(|k| {
-                *map.entry(k).or_insert(0) += 1;
-            });
-
-            // dbg!(&map);
-            dbg!(map.iter().max_by_key(|(_, count)| *count).unwrap().0);
-        }
-
-        Ok("".to_string())
+        Ok(self
+            .iter()
+            .map(|m| m.iter().max_by_key(|(_, count)| *count).unwrap().0)
+            .collect())
     }
 
     fn part2(&mut self) -> aoc_ornaments::SolutionResult<Self::Output> {
-        // dbg!(&self);
-
-        for chars in self.iter() {
-            let mut map = HashMap::new();
-            // dbg!(&chars);
-            chars.iter().for_each(|k| {
-                *map.entry(k).or_insert(0) += 1;
-            });
-
-            dbg!(map.iter().min_by_key(|(_, count)| *count).unwrap().0);
-        }
-
-        todo!()
+        Ok(self
+            .iter()
+            .map(|m| m.iter().min_by_key(|(_, count)| *count).unwrap().0)
+            .collect())
     }
 }
 
