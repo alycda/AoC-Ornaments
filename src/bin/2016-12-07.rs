@@ -6,6 +6,7 @@ use std::str::FromStr;
 use aoc_ornaments::{Part, Solution};
 use nom::{
     branch::alt,
+    bytes::complete::tag,
     character::complete::{alpha1, char},
     multi::{many0, many1, separated_list1},
     sequence::{delimited, tuple},
@@ -52,12 +53,15 @@ impl Day {
 
     //     todo!()
     // }
-    fn parse_line(input: &str) -> IResult<&str, (Vec<&str>, Vec<&str>)> {
-        // many1(alt((alpha1, delimited(char('['), alpha1, char('[')))))(input)
-        tuple((
-            separated_list1(delimited(char('['), alpha1, char(']')), alpha1),
-            many0(delimited(char('['), alpha1, char(']'))),
-        ))(input)
+    // fn parse_line(input: &str) -> IResult<&str, (Vec<&str>, Vec<&str>)> {
+    //     // many1(alt((alpha1, delimited(char('['), alpha1, char('[')))))(input)
+    //     tuple((
+    //         separated_list1(delimited(char('['), alpha1, char(']')), alpha1),
+    //         many0(delimited(char('['), alpha1, char(']'))),
+    //     ))(input)
+    // }
+    fn parse_line(input: &str) -> IResult<&str, Vec<&str>> {
+        many1(alt((delimited(tag("["), alpha1, tag("]")), alpha1)))(input)
     }
 }
 
