@@ -2,37 +2,22 @@
 
 use std::str::FromStr;
 
-use aoc_ornaments::{Part, Solution};
+use aoc_ornaments::{hash::AocHash, Part, Solution};
 
 #[derive(Debug, derive_more::Deref)]
-struct Day(String);
+struct Day(AocHash);
 
 impl FromStr for Day {
     type Err = miette::Error;
 
     fn from_str(input: &str) -> miette::Result<Self> {
-        Ok(Self(input.to_owned()))
+        Ok(Self(input.parse()?))
     }
 }
 
 impl Day {
-    fn generate_hash_bytes(key: &str, number: u32) -> [u8; 16] {
-        let input = format!("{}{}", key, number);
-        md5::compute(input).0
-    }
-    
-    /// First two bytes must be 0
-    fn has_five_leading_zeros(hash: &[u8; 16]) -> bool {
-        hash[0] == 0 && hash[1] == 0 && (hash[2] & 0xf0) == 0
-    }
-    
-    /// First three bytes must be 0
-    fn has_six_leading_zeros(hash: &[u8; 16]) -> bool {
-        hash[0] == 0 && hash[1] == 0 && hash[2] == 0
-    }
-
     fn compute(&self, l: fn(&[u8; 16]) -> bool) -> Option<u32> {
-        (1..).find(|&n| l(&Day::generate_hash_bytes(&self.0, n)))
+        (1..).find(|&n| l(&AocHash::generate_hash_bytes(&self.0, n)))
     }
 }
 
@@ -41,12 +26,12 @@ impl Solution for Day {
 
     /// Find the lowest positive number that, when combined with the input string, produces an MD5 hash with five leading zeros.
     fn part1(&mut self) -> miette::Result<Self::Output> {
-        self.compute(Self::has_five_leading_zeros).ok_or_else(|| miette::miette!("No solution found"))
+        self.compute(AocHash::has_five_leading_zeros).ok_or_else(|| miette::miette!("No solution found"))
     }
 
     /// Find the lowest positive number that, when combined with the input string, produces an MD5 hash with six leading zeros.
     fn part2(&mut self) -> miette::Result<Self::Output> {
-        self.compute(Self::has_six_leading_zeros).ok_or_else(|| miette::miette!("No solution found"))
+        self.compute(AocHash::has_six_leading_zeros).ok_or_else(|| miette::miette!("No solution found"))
     }
 }
 
@@ -60,4 +45,19 @@ fn main() -> miette::Result<()> {
     println!("Part 2: {}", part2);
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use rstest::rstest;
+
+    #[rstest]
+    #[case("abcdef", 609043)]
+    #[case("pqrstuv", 1048970)]
+    fn part_1(#[case] input: &str, #[case] expected: usize) {
+        let mut day = Day::from_str(input).unwrap();
+        assert_eq!(day.solve(Part::One).unwrap(), expected.to_string());
+    }
 }
