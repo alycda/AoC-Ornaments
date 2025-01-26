@@ -3,25 +3,29 @@
 
 use std::str::FromStr;
 
-use aoc_ornaments::{spatial::Position, ArgSolution, Part};
+use aoc_ornaments::{
+    spatial::{Grid, PhantomGrid, Position, Spatial},
+    ArgSolution, Part,
+};
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::{char, digit1, i32, space0},
+    character::complete::{char, i32, space0},
+    combinator::map,
     sequence::{preceded, tuple},
     IResult,
 };
 
 #[derive(Debug)]
 enum Dimension {
-    X,
-    Y,
+    X(i32),
+    Y(i32),
 }
 
 #[derive(Debug)]
 enum Operation {
     Rect(Position),
-    Shift(Dimension, usize),
+    Shift(Dimension, i32),
 }
 
 #[derive(Debug, derive_more::Deref)]
@@ -31,12 +35,12 @@ impl FromStr for Day {
     type Err = miette::Error;
 
     fn from_str(input: &str) -> miette::Result<Self> {
-        input.lines().for_each(|line| {
-            Self::parse_line(line).unwrap();
-        });
-
-        todo!();
-        // Ok(Self)
+        Ok(Self(
+            input
+                .lines()
+                .map(|line| Self::parse_line(line).unwrap().1)
+                .collect(),
+        ))
     }
 }
 
@@ -53,12 +57,15 @@ impl Day {
     }
 
     fn parse_shift(input: &str) -> IResult<&str, Operation> {
-        let (_, stuff) = preceded(
+        let (_, (_, dimension, _, _, _, offset)) = preceded(
             tag("rotate "),
             tuple((
                 space0,
-                alt((tag("row y="), tag("column x="))),
-                i32,
+                alt((
+                    map(tuple((tag("row y="), i32)), |(_, y)| Dimension::Y(y)),
+                    map(tuple((tag("column x="), i32)), |(_, x)| Dimension::X(x)),
+                )),
+                // i32,
                 space0,
                 tag("by"),
                 space0,
@@ -66,14 +73,43 @@ impl Day {
             )),
         )(input)?;
 
-        dbg!(&stuff);
+        // dbg!(&stuff);
 
-        Ok(("", Operation::Shift(Dimension::X, 0)))
+        Ok(("", Operation::Shift(dimension, offset)))
     }
 }
 
 impl ArgSolution<Position> for Day {
     type Output = usize;
+
+    fn part1(&mut self, args: Position) -> aoc_ornaments::SolutionResult<Self::Output> {
+        // dbg!(&self);
+
+        let mut grid = PhantomGrid::new(args.x as u32, args.y as u32);
+
+        self.iter().for_each(|instruction| {
+            println!("{grid}");
+            println!("{grid:?}\n");
+
+            match instruction {
+                Operation::Rect(size) => {
+                    let tmp_grid = Grid::initialize(size.x as usize, size.y as usize, '.');
+
+                    grid.flood_fill(Position::ZERO, |p: Position| tmp_grid.in_bounds(p))
+                        .iter()
+                        .for_each(|on| {
+                            grid.0.insert(*on);
+                        });
+                }
+                Operation::Shift(dimension, offset) => match dimension {
+                    Dimension::X(x) => todo!(),
+                    Dimension::Y(y) => todo!(),
+                },
+            }
+        });
+
+        Ok(grid.0.len())
+    }
 }
 
 fn main() -> miette::Result<()> {
