@@ -4,7 +4,7 @@
 use std::str::FromStr;
 
 use aoc_ornaments::{
-    spatial::{Grid, PhantomGrid, Position, Spatial},
+    spatial::{Grid, PhantomGrid, Position, Spatial, UniquePositions},
     ArgSolution, Part,
 };
 use nom::{
@@ -83,7 +83,7 @@ impl ArgSolution<Position> for Day {
     type Output = usize;
 
     fn part1(&mut self, args: Position) -> aoc_ornaments::SolutionResult<Self::Output> {
-        // dbg!(&self);
+        dbg!(&self);
 
         let mut grid = PhantomGrid::new(args.x as u32, args.y as u32);
 
@@ -102,7 +102,26 @@ impl ArgSolution<Position> for Day {
                         });
                 }
                 Operation::Shift(dimension, offset) => match dimension {
-                    Dimension::X(x) => todo!(),
+                    Dimension::X(x) => {
+                        // get all pos where X = x, then add offset to Y??
+
+                        let g = grid
+                            .0
+                            .iter()
+                            .cloned()
+                            .map(|mut p| {
+                                if p.x == *x {
+                                    p.y += offset;
+                                }
+                                p
+                            })
+                            // .filter(|p| p.x == *x)
+                            // .for_each(|mut p| p.y += offset);
+                            // .map(|p| p + Position::new(x, offset))
+                            .collect::<std::collections::HashSet<_>>();
+
+                        grid = PhantomGrid(g, (Position::ZERO, args));
+                    }
                     Dimension::Y(y) => todo!(),
                 },
             }
