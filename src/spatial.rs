@@ -107,12 +107,6 @@ impl Spatial for PhantomGrid {
     }
 }
 
-// impl ToString for PhantomGrid {
-//     fn to_string(&self) -> String {
-//         todo!()
-//     }
-// }
-
 impl Display for PhantomGrid {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let interesting = &self.0;
@@ -123,18 +117,14 @@ impl Display for PhantomGrid {
             for x in min.x..=max.x {
                 let pos = Position::new(x, y);
                 if interesting.contains(&pos) {
-                    // print!("#");
-                    write!(f, "#");
+                    write!(f, "#")?;
                 } else {
-                    // print!(".");
-                    write!(f, ".");
+                    write!(f, ".")?;
                 }
             }
-            // println!();
-            write!(f, "\n");
+            writeln!(f)?;
         }
 
-        // write!(f, "ok")
         Ok(())
     }
 }
