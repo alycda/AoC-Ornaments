@@ -86,9 +86,9 @@ pub trait Spatial: Display {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, derive_more::Deref)]
 /// only stores the interesting positions and minmax bounds
-pub struct PhantomGrid(pub UniquePositions, pub (Position, Position));
+pub struct PhantomGrid(#[deref] pub UniquePositions, pub (Position, Position));
 
 impl Spatial for PhantomGrid {
     fn new(width: u32, height: u32) -> Self {
@@ -128,6 +128,14 @@ impl Display for PhantomGrid {
         Ok(())
     }
 }
+
+// impl std::ops::Deref for PhantomGrid {
+//     type Target = HashSet<Position>;
+
+//     fn deref(&self) -> &Self::Target {
+//         &self.0
+//     }
+// }
 
 #[derive(Debug, derive_more::Deref, derive_more::DerefMut)]
 pub struct Grid<T>(pub Vec<Vec<T>>);
