@@ -4,7 +4,7 @@
 use std::str::FromStr;
 
 use aoc_ornaments::{
-    spatial::{Grid, PhantomGrid, Position, Spatial, UniquePositions},
+    spatial::{Grid, PhantomGrid, Position, Spatial},
     ArgSolution, Part,
 };
 use nom::{
@@ -65,15 +65,12 @@ impl Day {
                     map(tuple((tag("row y="), i32)), |(_, y)| Dimension::Y(y)),
                     map(tuple((tag("column x="), i32)), |(_, x)| Dimension::X(x)),
                 )),
-                // i32,
                 space0,
                 tag("by"),
                 space0,
                 i32,
             )),
         )(input)?;
-
-        // dbg!(&stuff);
 
         Ok(("", Operation::Shift(dimension, offset)))
     }
@@ -82,14 +79,12 @@ impl Day {
 impl ArgSolution<Position> for Day {
     type Output = usize;
 
-    fn part1(&mut self, args: Position) -> aoc_ornaments::SolutionResult<Self::Output> {
-        // dbg!(&self);
-
+    fn solve(&mut self, _part: Part) -> aoc_ornaments::SolutionResult<String> {
         let mut grid = PhantomGrid::new(args.x as u32, args.y as u32);
 
         self.iter().for_each(|instruction| {
-            println!("{grid}");
-            println!("{grid:?}\n");
+            // println!("{grid}");
+            // println!("{grid:?}\n");
 
             match instruction {
                 Operation::Rect(size) => {
@@ -108,7 +103,8 @@ impl ArgSolution<Position> for Day {
                             .cloned()
                             .map(|mut p| {
                                 if p.x == *x {
-                                    p.y += offset;
+                                    // Wrap around the height
+                                    p.y = (p.y + offset).rem_euclid(args.y);
                                 }
                                 p
                             })
@@ -122,7 +118,8 @@ impl ArgSolution<Position> for Day {
                             .cloned()
                             .map(|mut p| {
                                 if p.y == *y {
-                                    p.x += offset;
+                                    // Wrap around the width
+                                    p.x = (p.x + offset).rem_euclid(args.x);
                                 }
                                 p
                             })
@@ -134,17 +131,18 @@ impl ArgSolution<Position> for Day {
             }
         });
 
-        Ok(grid.0.len())
+        // Part 2
+        println!("{grid}");
+
+        Ok(grid.0.len().to_string())
     }
 }
 
 fn main() -> miette::Result<()> {
     let mut puzzle = Day::from_str(include_str!("../inputs/2016-12-08.txt"))?;
     let part1 = puzzle.solve(Part::One, Position::new(50, 6))?;
-    // let part2 = puzzle.solve(Part::Two)?;
 
     println!("Part 1: {part1}");
-    // println!("Part 2: {part2}");
 
     Ok(())
 }
@@ -164,11 +162,6 @@ rotate column x=1 by 1",
 
         assert_eq!(day.solve(Part::One, Position::new(7, 3))?, "6");
 
-        Ok(())
-    }
-
-    #[test]
-    fn part_2() -> miette::Result<()> {
         Ok(())
     }
 }
