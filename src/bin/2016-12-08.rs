@@ -79,7 +79,7 @@ impl Day {
 impl ArgSolution<Position> for Day {
     type Output = usize;
 
-    fn solve(&mut self, _part: Part) -> aoc_ornaments::SolutionResult<String> {
+    fn solve(&mut self, _part: Part, args: Position) -> aoc_ornaments::SolutionResult<String> {
         let mut grid = PhantomGrid::new(args.x as u32, args.y as u32);
 
         self.iter().for_each(|instruction| {

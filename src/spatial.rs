@@ -129,14 +129,6 @@ impl Display for PhantomGrid {
     }
 }
 
-// impl std::ops::Deref for PhantomGrid {
-//     type Target = HashSet<Position>;
-
-//     fn deref(&self) -> &Self::Target {
-//         &self.0
-//     }
-// }
-
 #[derive(Debug, derive_more::Deref, derive_more::DerefMut)]
 pub struct Grid<T>(pub Vec<Vec<T>>);
 
