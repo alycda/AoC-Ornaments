@@ -3,7 +3,7 @@
 
 use std::{collections::BTreeSet, fmt::Display, str::FromStr};
 
-use aoc_ornaments::{ArgSolution, Part};
+use aoc_ornaments::{bits::Wires, ArgSolution, Part};
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_until},
@@ -139,35 +139,63 @@ impl ArgSolution<(u32, u32)> for Day {
     fn part1(&mut self, _args: (u32, u32)) -> aoc_ornaments::SolutionResult<Self::Output> {
         // dbg!(&self);
         println!("{self}");
-        let mut bots = BTreeSet::new();
-        let mut outputs = BTreeSet::new();
+        let mut wires = Wires::<Bot>::new();
 
         self.iter().for_each(|op| match op {
             Operation::Give(from, low, high) => {
-                bots.insert(from);
+                // bots.insert(from);
                 match low {
                     Out::B(id) => {
-                        bots.insert(id);
+                        // bots.insert(id);
                     }
                     Out::O(id) => {
-                        outputs.insert(id);
+                        // outputs.insert(id);
                     }
                 }
                 match high {
                     Out::B(id) => {
-                        bots.insert(id);
+                        // bots.insert(id);
                     }
                     Out::O(id) => {
-                        outputs.insert(id);
+                        // outputs.insert(id);
                     }
                 }
             }
             Operation::Take(bot, value) => {
-                bots.insert(bot);
+                // wires.insert(bot, Bot(Some(value), None));
+                wires
+                    .entry(format!("b{bot}"))
+                    .and_modify(|bot| {
+                        match (bot.0, bot.1) {
+                            (None, None) => panic!("is this supposed to happen?"),
+                            (Some(_), Some(_)) => panic!("can't evaluate yet"),
+                            (Some(low), None) => {
+                                *bot = if *value > low {
+                                    Bot(Some(low), Some(*value))
+                                } else {
+                                    Bot(Some(*value), Some(low))
+                                }
+                            }
+                            (None, Some(high)) => {
+                                *bot = if *value < high {
+                                    Bot(Some(*value), Some(high))
+                                } else {
+                                    Bot(Some(high), Some(*value))
+                                }
+                            }
+                        }
+
+                        // *bot = if *value > bot.0.unwrap() {
+                        //     Bot(bot.0.take(), Some(*value))
+                        // } else {
+                        //     Bot(Some(*value), bot.0.take())
+                        // }
+                    })
+                    .or_insert(Bot(Some(*value), None));
             }
         });
 
-        dbg!(&bots, &outputs);
+        dbg!(&wires);
 
         todo!()
     }
