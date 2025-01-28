@@ -8,7 +8,8 @@ use nom::{
     branch::alt,
     bytes::complete::{tag, take_until},
     character::complete::u32,
-    sequence::preceded,
+    combinator::map,
+    sequence::{preceded, tuple},
     IResult,
 };
 
@@ -16,14 +17,24 @@ use nom::{
 // struct Day(LogicCircuit<u32, Operation>);
 struct Day(Vec<Operation>);
 
+#[derive(Debug)]
+enum Out {
+    B(u32),
+    O(u32),
+}
+
 /// low, high
 #[derive(Debug)]
 struct Bot(Option<u32>, Option<u32>);
 
+/// id, value
+#[derive(Debug)]
+struct Output(u32, u32);
+
 #[derive(Debug)]
 enum Operation {
     /// from bot, low to bot, high to bot
-    Give(u32, u32, u32),
+    Give(u32, Out, Out),
     /// bot, value
     Take(u32, u32),
 }
@@ -49,24 +60,41 @@ impl Day {
     /// bot X gives low to bot|output Y and high to bot|output Z
     fn parse_bot(input: &str) -> IResult<&str, Operation> {
         let (input, from_bot) = preceded(tag("bot "), u32)(input)?;
-        let (input, _) = Self::find_bot(input)?;
-        let (input, low_bot) = Self::bot_id(input)?;
-        let (input, _) = Self::find_bot(input)?;
-        let (_, high_bot) = Self::bot_id(input)?;
+        let (input, low) = Self::find_bot_or_output(input)?;
+        let (_, high) = Self::find_bot_or_output(input)?;
 
-        Ok(("", Operation::Give(from_bot, low_bot, high_bot)))
+        // dbg!(from_bot, low, high);
+
+        // let (input, _) = Self::find_bot_or_output(input)?;
+        // let (input, low_bot) = Self::bot_id(input)?;
+        // let (input, _) = Self::find_bot_or_output(input)?;
+        // let (_, high_bot) = Self::bot_id(input)?;
+
+        Ok(("", Operation::Give(from_bot, low, high)))
     }
 
     fn find_bot(input: &str) -> IResult<&str, &str> {
         take_until("bot")(input)
     }
 
-    // fn find_bot_or_output(input: &str) -> IResult<&str, &str> {
-    //     take_until(alt((tag("bot"), tag("output"))))
-    // }
+    /// don't try: `take_until(alt((tag("bot"), tag("output"))))(input)``
+    fn find_bot_or_output(input: &str) -> IResult<&str, Out> {
+        alt((
+            map(tuple((take_until("output"), Self::output_id)), |(_, id)| {
+                Out::O(id)
+            }),
+            map(tuple((take_until("bot"), Self::bot_id)), |(_, id)| {
+                Out::B(id)
+            }),
+        ))(input)
+    }
 
     fn bot_id(input: &str) -> IResult<&str, u32> {
         preceded(tag("bot "), u32)(input)
+    }
+
+    fn output_id(input: &str) -> IResult<&str, u32> {
+        preceded(tag("output "), u32)(input)
     }
 
     /// value X goes to bot Y
