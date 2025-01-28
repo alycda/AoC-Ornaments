@@ -43,9 +43,6 @@ impl Day {
 
     fn invert(s: &str) -> String {
         let c = s.chars().collect::<Vec<_>>();
-        // dbg!(&c[0]);
-        // format!("{c[1]}{c[0]}{c[1]}")
-        // todo!()
         [c[1], c[0], c[1]].iter().collect()
     }
 
@@ -57,18 +54,10 @@ impl Day {
                     .collect::<Vec<_>>()
                     .windows(3)
                     .filter(|x| x[0] == x[2] && x[0] != x[1])
-                    // .cloned()
                     .map(|w| w.to_vec().iter().collect::<String>())
                     .collect::<Vec<_>>()
             })
-            .filter(|h| {
-                // dbg!(h, &seq);
-
-                seq.iter().any(|s| {
-                    // dbg!(s, &h, &Self::invert(&h));
-                    s.contains(&Self::invert(&h))
-                })
-            })
+            .filter(|h| seq.iter().any(|s| s.contains(&Self::invert(&h))))
             .count()
             > 0
     }
