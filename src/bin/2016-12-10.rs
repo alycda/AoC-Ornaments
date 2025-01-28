@@ -1,7 +1,7 @@
 //! # Day 10: Balance Bots
 //!
 
-use std::str::FromStr;
+use std::{fmt::Display, str::FromStr};
 
 use aoc_ornaments::{ArgSolution, Part};
 use nom::{
@@ -23,6 +23,15 @@ enum Out {
     O(u32),
 }
 
+impl Display for Out {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Out::B(x) => write!(f, "bot {x}"),
+            Out::O(x) => write!(f, "output {x}"),
+        }
+    }
+}
+
 /// low, high
 #[derive(Debug)]
 struct Bot(Option<u32>, Option<u32>);
@@ -39,6 +48,17 @@ enum Operation {
     Take(u32, u32),
 }
 
+impl Display for Operation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Operation::Give(from_bot, low, high) => {
+                writeln!(f, "bot {from_bot} gives low to {low} and high to {high}")
+            }
+            Operation::Take(bot, value) => writeln!(f, "value {value} goes to bot {bot}"),
+        }
+    }
+}
+
 impl FromStr for Day {
     type Err = miette::Error;
 
@@ -52,6 +72,14 @@ impl FromStr for Day {
     }
 }
 
+impl Display for Day {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.iter().for_each(|i| write!(f, "{i}").unwrap());
+
+        writeln!(f)
+    }
+}
+
 impl Day {
     fn parse_line(input: &str) -> IResult<&str, Operation> {
         alt((Self::parse_bot, Self::parse_value))(input)
@@ -62,13 +90,6 @@ impl Day {
         let (input, from_bot) = preceded(tag("bot "), u32)(input)?;
         let (input, low) = Self::find_bot_or_output(input)?;
         let (_, high) = Self::find_bot_or_output(input)?;
-
-        // dbg!(from_bot, low, high);
-
-        // let (input, _) = Self::find_bot_or_output(input)?;
-        // let (input, low_bot) = Self::bot_id(input)?;
-        // let (input, _) = Self::find_bot_or_output(input)?;
-        // let (_, high_bot) = Self::bot_id(input)?;
 
         Ok(("", Operation::Give(from_bot, low, high)))
     }
@@ -111,7 +132,8 @@ impl ArgSolution<(u32, u32)> for Day {
     type Output = u32;
 
     fn part1(&mut self, _args: (u32, u32)) -> aoc_ornaments::SolutionResult<Self::Output> {
-        dbg!(&self);
+        // dbg!(&self);
+        println!("{self}");
 
         todo!()
     }
