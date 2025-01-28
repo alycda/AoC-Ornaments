@@ -1,7 +1,7 @@
 //! # Day 10: Balance Bots
 //!
 
-use std::{fmt::Display, str::FromStr};
+use std::{collections::BTreeSet, fmt::Display, str::FromStr};
 
 use aoc_ornaments::{ArgSolution, Part};
 use nom::{
@@ -26,8 +26,10 @@ enum Out {
 impl Display for Out {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Out::B(x) => write!(f, "bot {x}"),
-            Out::O(x) => write!(f, "output {x}"),
+            // Out::B(x) => write!(f, "bot {x}"),
+            // Out::O(x) => write!(f, "output {x}"),
+            Out::B(x) => write!(f, "b{x}"),
+            Out::O(x) => write!(f, "o{x}"),
         }
     }
 }
@@ -52,9 +54,12 @@ impl Display for Operation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Operation::Give(from_bot, low, high) => {
-                writeln!(f, "bot {from_bot} gives low to {low} and high to {high}")
+                // writeln!(f, "bot {from_bot} gives low to {low} and high to {high}")
+                writeln!(f, "b{from_bot}.0 -> {low}")?;
+                writeln!(f, "b{from_bot}.1 -> {high}")
             }
-            Operation::Take(bot, value) => writeln!(f, "value {value} goes to bot {bot}"),
+            // Operation::Take(bot, value) => writeln!(f, "value {value} goes to bot {bot}"),
+            Operation::Take(bot, value) => writeln!(f, "{value} -> b{bot}"),
         }
     }
 }
@@ -74,7 +79,7 @@ impl FromStr for Day {
 
 impl Display for Day {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.iter().for_each(|i| write!(f, "{i}").unwrap());
+        self.iter().for_each(|i| write!(f, "{i}").unwrap());
 
         writeln!(f)
     }
@@ -134,6 +139,35 @@ impl ArgSolution<(u32, u32)> for Day {
     fn part1(&mut self, _args: (u32, u32)) -> aoc_ornaments::SolutionResult<Self::Output> {
         // dbg!(&self);
         println!("{self}");
+        let mut bots = BTreeSet::new();
+        let mut outputs = BTreeSet::new();
+
+        self.iter().for_each(|op| match op {
+            Operation::Give(from, low, high) => {
+                bots.insert(from);
+                match low {
+                    Out::B(id) => {
+                        bots.insert(id);
+                    }
+                    Out::O(id) => {
+                        outputs.insert(id);
+                    }
+                }
+                match high {
+                    Out::B(id) => {
+                        bots.insert(id);
+                    }
+                    Out::O(id) => {
+                        outputs.insert(id);
+                    }
+                }
+            }
+            Operation::Take(bot, value) => {
+                bots.insert(bot);
+            }
+        });
+
+        dbg!(&bots, &outputs);
 
         todo!()
     }

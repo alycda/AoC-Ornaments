@@ -1,8 +1,11 @@
 //! Day 7: Some Assembly Required
 
-use std::str::FromStr;
-use aoc_ornaments::{bits::{LogicCircuit, LogicGate, Operand, Wires}, Part, Solution};
+use aoc_ornaments::{
+    bits::{LogicCircuit, LogicGate, Operand, Wires},
+    Part, Solution,
+};
 use miette::Context;
+use std::str::FromStr;
 
 #[derive(Debug, derive_more::Deref, derive_more::DerefMut)]
 struct Day(LogicCircuit<String, Operand>);
@@ -30,7 +33,9 @@ impl FromStr for Day {
                     ));
                 }
                 [left, op, right, "->", output] => {
-                    let operation = op.parse().with_context(|| format!("Invalid operation: {op}"))?;
+                    let operation = op
+                        .parse()
+                        .with_context(|| format!("Invalid operation: {op}"))?;
                     instructions.push(LogicGate::new(
                         left.to_string(),
                         right.to_string(),
@@ -62,7 +67,7 @@ impl Solution for Day {
 
         // Override wire b with part1's result
         self.wires.insert("b".to_string(), part1_result);
-        
+
         self.execute()?;
         self.resolve_wire("a").map(|v| v.to_string())
     }
@@ -85,15 +90,14 @@ mod tests {
 
     #[test]
     fn test_basic_circuit() -> miette::Result<()> {
-        let input = "\
-            123 -> x\n\
-            456 -> y\n\
-            x AND y -> d\n\
-            x OR y -> e\n\
-            x LSHIFT 2 -> f\n\
-            y RSHIFT 2 -> g\n\
-            NOT x -> h\n\
-            NOT y -> i";
+        let input = "123 -> x
+456 -> y
+x AND y -> d
+x OR y -> e
+x LSHIFT 2 -> f
+y RSHIFT 2 -> g
+NOT x -> h
+NOT y -> i";
 
         let mut circuit = input.parse::<Day>()?;
         circuit.execute()?;
