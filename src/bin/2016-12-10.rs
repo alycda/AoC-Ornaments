@@ -132,58 +132,73 @@ impl Day {
         Ok(("", Operation::Take(bot_id, value)))
     }
 
-    fn execute(wires: &mut Wires<Bot>, pending: &mut Vec<(String, String, String)>) {
+    fn execute(wires: &mut Wires<Bot>, pending: Vec<(String, String, String)>) {
         let mut made_progress = true;
 
         while made_progress {
             made_progress = false;
 
-            for todo in pending {
-                let (from, low, high) = todo;
+            for (from_bot, low_dest, high_dest) in &pending {
+                if let Some(Bot(Some(low_val), Some(high_val))) = wires.get(from_bot) {
+                    let low_val = *low_val;
+                    let high_val = *high_val;
 
-                if let Some(Bot(Some(l), Some(h))) = wires.get(from) {
+                    // dbg!(&low_val, &low_dest, &high_val, &high_dest);
+                    // dbg!(&wires.get(low_dest));
+
                     wires
-                        .entry(low.to_string())
+                        .entry(low_dest.clone())
                         .and_modify(|bot| match (bot.0, bot.1) {
-                            (None, None) => panic!("is this supposed to happen?"),
-                            (Some(_), Some(_)) => panic!("can't evaluate yet"),
-                            (Some(low), None) => {
-                                *bot = if *l > low {
-                                    Bot(Some(low), Some(*l))
+                            (None, None) => panic!("help"),
+                            (Some(a), Some(b)) => {
+                                dbg!(a, b);
+                                panic!("now what?")
+                            }
+                            (Some(l), None) => {
+                                *bot = if l > low_val {
+                                    Bot(Some(low_val), Some(l))
                                 } else {
-                                    Bot(Some(*l), Some(low))
+                                    Bot(Some(l), Some(low_val))
                                 }
                             }
-                            (None, Some(high)) => {
-                                *bot = if *h < high {
-                                    Bot(Some(*h), Some(high))
+                            (None, Some(h)) => {
+                                *bot = if h < low_val {
+                                    Bot(Some(h), Some(low_val))
                                 } else {
-                                    Bot(Some(high), Some(*h))
+                                    Bot(Some(low_val), Some(h))
                                 }
                             }
                         })
-                        .or_insert(Bot(Some(*l), None));
+                        .or_insert(Bot(Some(low_val), None));
+
                     wires
-                        .entry(high.to_string())
+                        .entry(high_dest.clone())
                         .and_modify(|bot| match (bot.0, bot.1) {
-                            (None, None) => panic!("is this supposed to happen?"),
-                            (Some(_), Some(_)) => panic!("can't evaluate yet"),
-                            (Some(low), None) => {
-                                *bot = if *l > low {
-                                    Bot(Some(low), Some(*l))
+                            (None, None) => panic!("help"),
+                            (Some(a), Some(b)) => {
+                                dbg!(a, b);
+                                panic!("now what?")
+                            }
+                            (Some(l), None) => {
+                                *bot = if l > high_val {
+                                    Bot(Some(high_val), Some(l))
                                 } else {
-                                    Bot(Some(*l), Some(low))
+                                    Bot(Some(l), Some(high_val))
                                 }
                             }
-                            (None, Some(high)) => {
-                                *bot = if *h < high {
-                                    Bot(Some(*h), Some(high))
+                            (None, Some(h)) => {
+                                *bot = if h < high_val {
+                                    Bot(Some(h), Some(high_val))
                                 } else {
-                                    Bot(Some(high), Some(*h))
+                                    Bot(Some(high_val), Some(h))
                                 }
                             }
                         })
-                        .or_insert(Bot(Some(*h), None));
+                        .or_insert(Bot(Some(high_val), None));
+
+                    dbg!(&wires);
+
+                    wires.insert(from_bot.clone(), Bot(None, None));
                     made_progress = true;
                 }
             }
@@ -231,8 +246,8 @@ impl ArgSolution<(u32, u32)> for Day {
         });
 
         dbg!(&wires, &pending);
-        Self::execute(&mut wires, &mut pending);
-        dbg!(&wires, &pending);
+        Self::execute(&mut wires, pending);
+        dbg!(&wires);
 
         todo!()
     }
