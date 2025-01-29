@@ -132,8 +132,13 @@ impl Day {
         Ok(("", Operation::Take(bot_id, value)))
     }
 
-    fn execute(wires: &mut Wires<Bot>, pending: Vec<(String, String, String)>) {
+    fn execute(
+        wires: &mut Wires<Bot>,
+        pending: Vec<(String, String, String)>,
+        target: Bot,
+    ) -> String {
         let mut made_progress = true;
+        let mut bot_id = String::new();
 
         while made_progress {
             made_progress = false;
@@ -143,8 +148,9 @@ impl Day {
                     let low_val = *low_val;
                     let high_val = *high_val;
 
-                    // dbg!(&low_val, &low_dest, &high_val, &high_dest);
-                    // dbg!(&wires.get(low_dest));
+                    if target.0.unwrap() == low_val && target.1.unwrap() == high_val {
+                        bot_id = from_bot.clone()
+                    }
 
                     wires
                         .entry(low_dest.clone())
@@ -196,22 +202,24 @@ impl Day {
                         })
                         .or_insert(Bot(Some(high_val), None));
 
-                    dbg!(&wires);
+                    // dbg!(&wires);
 
                     wires.insert(from_bot.clone(), Bot(None, None));
                     made_progress = true;
                 }
             }
         }
+
+        dbg!(bot_id.chars().skip(1).collect::<String>())
     }
 }
 
-impl ArgSolution<(u32, u32)> for Day {
-    type Output = u32;
+impl ArgSolution<Bot> for Day {
+    type Output = String;
 
-    fn part1(&mut self, _args: (u32, u32)) -> aoc_ornaments::SolutionResult<Self::Output> {
+    fn part1(&mut self, args: Bot) -> aoc_ornaments::SolutionResult<Self::Output> {
         // dbg!(&self);
-        println!("{self}");
+        // println!("{self}");
         let mut wires = Wires::<Bot>::new();
         let mut pending = vec![];
 
@@ -245,17 +253,15 @@ impl ArgSolution<(u32, u32)> for Day {
             }
         });
 
-        dbg!(&wires, &pending);
-        Self::execute(&mut wires, pending);
-        dbg!(&wires);
-
-        todo!()
+        // dbg!(&wires, &pending);
+        Ok(Self::execute(&mut wires, pending, args))
+        // dbg!(&wires);
     }
 }
 
 fn main() -> miette::Result<()> {
     let mut puzzle = Day::from_str(include_str!("../inputs/2016-12-10.txt"))?;
-    let part1 = puzzle.solve(Part::One, (61, 17))?;
+    let part1 = puzzle.solve(Part::One, Bot(Some(17), Some(61)))?;
     // let part2 = puzzle.solve(Part::Two)?;
 
     println!("Part 1: {part1}");
@@ -277,7 +283,7 @@ bot 1 gives low to output 1 and high to bot 0
 bot 0 gives low to output 2 and high to output 0
 value 2 goes to bot 2";
         let mut day = Day::from_str(input)?;
-        assert_eq!(day.solve(Part::One, (5, 2))?, "2");
+        assert_eq!(day.solve(Part::One, Bot(Some(2), Some(5)))?, "2");
 
         Ok(())
     }
