@@ -2,11 +2,9 @@
 
 use std::str::FromStr;
 
-use aoc_ornaments::{Part, Solution};
+use aoc_ornaments::{nom::parse_dimensions, Part, Solution};
 
-use nom::{
-    character::complete::{char, u32}, multi::separated_list1, IResult
-};
+use nom::IResult;
 
 type Width = u32;
 type Length = u32;
@@ -26,29 +24,16 @@ impl FromStr for Day {
     /// - `2x3x4` has dimensions `2`, `3`, and `4`.
     /// 
     fn from_str(input: &str) -> miette::Result<Self> {
-        let parsed = input.lines()
+        Ok(Self(input.lines()
             .map(|line| {
-                let (_, (l, w, h)) = Self::parse_dimensions(line).unwrap();
+                let (_, (l, w, h)) = parse_dimensions(line).unwrap();
 
                 (l, w, h)
-            }).collect();
-
-        Ok(Self(parsed))
+            }).collect()))
     }
 }
 
 impl Day {
-    fn parse_dimensions(input: &str) -> IResult<&str, (u32, u32, u32)> {
-        let (input, nums) = separated_list1(char('x'), u32)(input)?;
-        match nums.as_slice() {
-            [l, w, h] => Ok((input, (*l, *w, *h))),
-            _ => Err(nom::Err::Error(nom::error::Error::new(
-                input,
-                nom::error::ErrorKind::LengthValue
-            )))
-        }
-    }
-
     fn dimensions(sides: (u32, u32, u32)) -> u32 {
         let (l, w, h) = sides;
         let a = l * w;

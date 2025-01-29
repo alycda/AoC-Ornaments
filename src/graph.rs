@@ -41,22 +41,16 @@ impl<T: std::ops::Add<Output = T> + Clone + Copy + Ord + Default> Distances<T> {
     // }
 
     /// straight line
-    pub fn find_shortest_path(
-        &self,
-    ) -> Option<T> {
+    pub fn find_shortest_path(&self) -> Option<T> {
         TravelingSales::best(self, T::min)
     }
 
     /// straight line
-    pub fn find_longest_path(
-        &self,
-    ) -> Option<T> {
+    pub fn find_longest_path(&self) -> Option<T> {
         TravelingSales::best(self, T::max)
     }
 
-    pub fn find_longest_circular_path(
-        &self,
-    ) -> Option<T> {
+    pub fn find_longest_circular_path(&self) -> Option<T> {
         // TravelingSales::best_circular(self, T::max)
 
         todo!()
@@ -146,22 +140,22 @@ impl<T: std::ops::Add<Output = T> + Clone + Copy + Ord + Default> TravelingSales
         }
     }
 
-    fn best_circular() {
+    fn _best_circular() {
         todo!()
     }
 
-    fn circular_path(
-        locations: &Distances<T>,
-        current: &str,
+    fn _circular_path(
+        _locations: &Distances<T>,
+        _current: &str,
         remaining: &mut HashSet<&str>,
-        running_total: T,
+        _running_total: T,
     ) {
         if remaining.is_empty() {
             // Add the final connection back to start
 
             return;
         }
-        let neighbors: Vec<_> = remaining.iter().copied().collect();
+        let _neighbors: Vec<_> = remaining.iter().copied().collect();
 
         todo!()
     }
