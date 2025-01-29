@@ -148,9 +148,9 @@ impl Day {
                     let low_val = *low_val;
                     let high_val = *high_val;
 
-                    if target.0.unwrap() == low_val && target.1.unwrap() == high_val {
-                        bot_id = from_bot.clone()
-                    }
+                    // if target.0.unwrap() == low_val && target.1.unwrap() == high_val {
+                    //     bot_id = from_bot.clone()
+                    // }
 
                     wires
                         .entry(low_dest.clone())
@@ -210,7 +210,12 @@ impl Day {
             }
         }
 
-        dbg!(bot_id.chars().skip(1).collect::<String>())
+        // dbg!(&wires);
+        dbg!(&wires.get("o0"));
+        dbg!(&wires.get("o1"));
+        dbg!(&wires.get("o2"));
+
+        bot_id.chars().skip(1).collect::<String>()
     }
 }
 
@@ -257,6 +262,12 @@ impl ArgSolution<Bot> for Day {
         Ok(Self::execute(&mut wires, pending, args))
         // dbg!(&wires);
     }
+
+    fn part2(&mut self, args: Bot) -> aoc_ornaments::SolutionResult<Self::Output> {
+        self.part1(args)?;
+
+        todo!();
+    }
 }
 
 fn main() -> miette::Result<()> {
@@ -290,6 +301,16 @@ value 2 goes to bot 2";
 
     #[test]
     fn part_2() -> miette::Result<()> {
+        let input = "value 5 goes to bot 2
+bot 2 gives low to bot 1 and high to bot 0
+value 3 goes to bot 1
+bot 1 gives low to output 1 and high to bot 0
+bot 0 gives low to output 2 and high to output 0
+value 2 goes to bot 2";
+        let mut day = Day::from_str(input)?;
+
+        assert_eq!(day.solve(Part::Two, Bot(None, None))?, "30");
+
         Ok(())
     }
 }
