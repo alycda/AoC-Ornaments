@@ -1,0 +1,31 @@
+{
+  // https://docs.github.com/en/codespaces/setting-up-your-project-for-codespaces/configuring-dev-containers/setting-a-minimum-specification-for-codespace-machines
+  // docker sometimes runs out of space when running containers and fails without clear indication of the machine type/size issue
+  "hostRequirements": {
+    // 2 cores is not usually enough for all the rust processes (rust-analyzer, cargo, etc)
+    "cpus": 8,
+    "memory": "32gb",
+    "storage": "64gb"
+  },
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "features": {
+    "ghcr.io/devcontainers/features/rust:1": {
+      "version": "latest",
+      "profile": "complete"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "workspaceFolder": "/workspaces/AdventOfCode/2025/rust",
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "vadimcn.vscode-lldb",
+        "tamasfe.even-better-toml",
+        "serayuzgur.crates",
+        "GitHub.copilot",
+        "JScearcy.rust-doc-viewer"
+      ]
+    }
+  },
+  "postCreateCommand": "rustup toolchain install nightly && rustup default nightly && cargo install just cargo-nextest cargo-generate flamegraph"
+}
