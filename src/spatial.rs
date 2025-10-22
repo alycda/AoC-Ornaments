@@ -52,6 +52,16 @@ impl<T: std::fmt::Debug + Copy + PartialEq> Grid<T> {
         Self(grid)
     }
 
+    pub fn square(size: usize, value: T) -> Self {
+        let mut grid = Vec::with_capacity(size);
+        for _ in 0..size {
+            let row = vec![value; size];
+            grid.push(row);
+        }
+
+        Self(grid)
+    }
+
     pub fn get_width(&self) -> usize {
         self[0].len()
     }
