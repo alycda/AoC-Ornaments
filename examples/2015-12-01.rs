@@ -41,6 +41,20 @@ impl Solution for Day {
     }
 
     /// Find the position of the first instruction that causes Santa to enter the basement.
+    /// 
+    /// ## alternate (readability)
+    /// ```rust
+    /// fn part2(floors: Vec<i32>) -> miette::Result<Self::Output> {
+    ///     let mut floor = 0;
+    ///     for (i, &step) in floors.enumerate() {
+    ///         floor += step;
+    ///         if floor < 0 {
+    ///             return Ok((i + 1) as i32);
+    ///         }
+    ///     }
+    ///     Err(miette::miette!("Never in basement"))
+    /// }
+    /// ```
     fn part2(&mut self) -> miette::Result<Self::Output> {
         let output = self.iter()
             // iterate over the instructions maintaining state (sum of floors)
@@ -59,6 +73,16 @@ impl Solution for Day {
     }
 
     /// Counting Valleys
+    /// 
+    /// ## alternate (performance)
+    /// ```rust
+    /// let (_, valleys) = self.iter().fold((0, 0), |(elev, valleys), &step| {
+    ///     let prev = elev;
+    ///     let curr = elev + step;
+    ///     let new_valleys = if prev < 0 && curr >= 0 { valleys + 1 } else { valleys };
+    ///     (curr, new_valleys)
+    /// });
+    /// ```
     fn part3(&mut self) -> miette::Result<Self::Output> {
         let valleys = self.iter()
             .scan(0, |elevation, &step| {
@@ -86,6 +110,7 @@ fn main() -> miette::Result<()> {
     Ok(())
 }
 
+/// cargo test --example 2015-12-01
 #[cfg(test)]
 mod tests {
     use super::*;
