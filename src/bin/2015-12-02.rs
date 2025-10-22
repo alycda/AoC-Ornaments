@@ -8,13 +8,11 @@ use nom::{
     character::complete::{char, u32}, multi::separated_list1, IResult
 };
 
-type Width = u32;
-type Length = u32;
-type Height = u32;
+type Dimensions = (u32, u32, u32);
 
 /// A collection of dimensions for a single present.
 #[derive(Debug, derive_more::Deref)]
-struct Day(Vec<(Length, Width, Height)>);
+struct Day(Vec<Dimensions>);
 
 impl FromStr for Day {
     type Err = miette::Error;
@@ -27,11 +25,12 @@ impl FromStr for Day {
     /// 
     fn from_str(input: &str) -> miette::Result<Self> {
         let parsed = input.lines()
-            .map(|line| {
-                let (_, (l, w, h)) = Self::parse_dimensions(line).unwrap();
-
-                (l, w, h)
-            }).collect();
+            .filter_map(|line| {
+                Self::parse_dimensions(line)
+                    .ok()
+                    .map(|(_, dims)| dims)
+            })
+            .collect();
 
         Ok(Self(parsed))
     }
@@ -49,25 +48,23 @@ impl Day {
         }
     }
 
-    fn dimensions(sides: (u32, u32, u32)) -> u32 {
-        let (l, w, h) = sides;
-        let a = l * w;
-        let b = w * h;
-        let c = h * l;
+    fn dimensions((l, w, h): Dimensions) -> u32 {
+        let sides = [l * w, w * h, h * l];
 
-        (2 * a) + (2 * b) + (2 * c) + [a, b, c].iter().min().unwrap()
+        2 * sides.iter().sum::<u32>() + sides.iter().min().unwrap()
     }
 
-    fn ribbon((a, b, c): (u32, u32, u32)) -> u32 {
-        let mut dimensions = [a, b, c];
-        dimensions.sort_unstable();
-        let [x, y, z] = dimensions;
+    fn ribbon((l, w, h): Dimensions) -> u32 {
+        let mut sides = [l, w, h];
+        sides.sort_unstable();
+        
+        let [x, y, z] = sides;
 
-        (2 * x) + (2 * y) + (x * y * z)
+        2 * (x + y) + x * y * z
     }
 
-    fn compute(&self, l: fn((u32, u32, u32)) -> u32) -> u32 {
-        self.iter().map(|sides| l(*sides)).sum()
+    fn compute(&self, f: fn(Dimensions) -> u32) -> u32 {
+        self.iter().map(|&d| f(d)).sum()
     }
 }
 
