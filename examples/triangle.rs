@@ -9,7 +9,10 @@ use std::ops::Add;
 
 pub struct Triangle<T: ZeroablePrimitive>([NonZero<T>; 3]);
 
-impl<T: ZeroablePrimitive + Ord + Add> Triangle<T> {
+impl<T> Triangle<T>
+where
+    T: ZeroablePrimitive + Ord + Add<Output = T> + PartialOrd + Copy,
+{
     pub fn build(mut sides: [NonZero<T>; 3]) -> Option<Triangle<T>> {
         sides.sort();
 
@@ -24,9 +27,11 @@ impl<T: ZeroablePrimitive + Ord + Add> Triangle<T> {
     pub fn is_real(&self) -> bool {
         let [a, b, c] = self.0;
 
-        (a + b >= c.into()) && 
-        (b + c >= a.into()) && 
-        (a + c >= b.into())
+        let (a, b, c) = (a.get(), b.get(), c.get());
+
+        (a + b >= c)
+            && (b + c >= a)
+            && (a + c >= b)
     }
     
     /// all values must be equal
@@ -64,10 +69,10 @@ mod tests {
     #[case([2, 3, 5], "all sides inequal", false)]
     // #[case([0.5, 0.5, 0.5], "equal float", true)]
     #[trace] //This attribute enable tracing
-    fn equilateral(#[case] input: u32, #[case] name: &str, #[case] expected: bool) {
+    fn equilateral(#[case] input: NonZero<u32>, #[case] name: &str, #[case] expected: bool) {
         let triangle = Triangle::build(input);
         assert!(triangle.is_some());
-        assert_eq!(triangle.is_equilateral, expected);
+        assert_eq!(triangle.is_equilateral(), expected);
     }
 
 }
