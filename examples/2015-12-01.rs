@@ -22,8 +22,8 @@ impl FromStr for Day {
         let parsed = input.chars()
             .map(|c| {
                 match c {
-                    '(' => 1,
-                    ')' => -1,
+                    '(' | 'U' => 1,
+                    ')' | 'D' => -1,
                     _ => 0,
                 }
             }).collect();
@@ -57,9 +57,24 @@ impl Solution for Day {
 
         Ok(output)
     }
+
+    /// Counting Valleys
+    fn part3(&mut self) -> miette::Result<Self::Output> {
+        let valleys = self.iter()
+            .scan(0, |elevation, &step| {
+                let prev_elevation = *elevation;
+                *elevation += step;
+                Some((prev_elevation, *elevation))
+            })
+            // Count transitions from below sea level (negative) to at/above sea level (>= 0)
+            .filter(|(prev, curr)| prev < &0 && curr >= &0)
+            .count();
+
+        Ok(valleys as i32)
+    }
 }
 
-/// Run Part 1 and Part 2.
+/// Runs Part 1 and Part 2.
 fn main() -> miette::Result<()> {
     let mut day = Day::from_str(include_str!("./inputs/2015-12-01.txt"))?;
     let part1 = day.solve(Part::One)?;
@@ -100,6 +115,16 @@ mod tests {
     fn test_day1_part2(#[case] input: &str, #[case] expected: i32) -> miette::Result<()> {
         let mut day = Day::from_str(input)?;
         assert_eq!(day.solve(Part::Two)?, expected.to_string());
+
+        Ok(())
+    }
+
+    #[rstest]
+    #[case("UDDDUDUU", 1)]
+    #[case("DDUUDDUDUUUD", 2)]
+    fn counting_valleys(#[case] input: &str, #[case] expected: i32) -> miette::Result<()> {
+        let mut day = Day::from_str(input)?;
+        assert_eq!(day.solve(Part::Three)?, expected.to_string());
 
         Ok(())
     }
