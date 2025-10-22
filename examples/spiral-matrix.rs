@@ -9,21 +9,36 @@ fn spiral_matrix(size: u32) -> Vec<Vec<u32>> {
     let grid = Grid::square(size as usize, 0);
     let start = Position::ZERO;
 
-    dbg!(grid);
+    dbg!(&grid);
 
     for i in 0..size as usize {
         // starting at position step right until edge OR non-zero; then turn right
         
     };
 
-    grid
+    grid.to_vec()
+}
+
+fn main() -> miette::Result<()> {
+    Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::rstest;
+
+    #[rstest]
+    #[case(0, "empty spiral", vec![])]
+    #[case(1, "trivial spiral", vec![vec![1]])]
+    #[case(2, "2x2 spiral", vec![vec![1, 2], vec![4, 3]])]
+    #[trace] //This attribute enable tracing
+    fn test_spirals(#[case] input: u32, #[case] name: &str, #[case] expected: Vec<Vec<u32>>) {
+        assert_eq!(spiral_matrix(input), expected);
+    }
 
     #[test]
+    #[ignore]
     fn empty_spiral() {
         let input = 0;
         let output = spiral_matrix(input);
@@ -32,6 +47,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn trivial_spiral() {
         let input = 1;
         let output = spiral_matrix(input);
@@ -40,6 +56,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn spiral_of_size_2() {
         let input = 2;
         let output = spiral_matrix(input);
