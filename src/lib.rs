@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+pub mod prelude;
 pub mod bits;
 pub mod intcode;
 pub mod graph;
